@@ -159,7 +159,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     updateDividend: async (id, d)    => { await db.updateDividendDB(id, d);        await refresh(); },
     deleteDividend: async (id)       => { await db.removeDividend(id);             await refresh(); },
     syncRed:        async ()          => { if (state.portfolio) { await syncRedFlags(state.portfolio.id); await refresh(); } },
-    syncPricesNow:  async ()          => { const res = await syncPrices(state.assets); setState(s => ({ ...s, priceMap: res.quoteMap, lastPriceSync: new Date().toISOString() })); await refresh(); return res; },
+    syncPricesNow:  async ()          => { const res = await syncPrices(state.assets); setState(s => ({ ...s, priceMap: res.quoteMap, lastPriceSync: new Date().toISOString() })); return res; },
     syncDividendsNow: async ()        => { if (!state.portfolio) return { synced: 0, errors: [] }; const res = await syncDividends(state.assets, state.portfolio.id); await refresh(); return res; },
     resetPortfolio:   async ()        => { if (state.portfolio) { await db.resetPortfolio(state.portfolio.id); await refresh(); } },
     resetSystem:      async ()          => { if (!state.portfolio) return; await db.resetPortfolio(state.portfolio.id); await refresh(); },

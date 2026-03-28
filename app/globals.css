@@ -293,11 +293,12 @@ body {
 
 /* ── Stabilize Advanced lock teaser — prevent layout shift ────────────────── */
 .advanced-lock-outer {
-  position: relative;
-  min-height: 160px;  /* fixed height prevents collapse/jump */
+  position: relative;   /* establishes containing block for the overlay */
+  min-height: 200px;    /* fixed height — prevents layout shift on data load */
   margin-bottom: 20px;
   margin-top: 4px;
-  contain: layout;    /* CSS containment — prevents layout recalc escaping */
+  overflow: hidden;     /* clips blur without breaking position:absolute children */
+  /* NO contain:layout — it breaks position:absolute overlay positioning */
 }
 .advanced-lock-blur {
   filter: blur(5px);
@@ -305,4 +306,11 @@ body {
   user-select: none;
   opacity: 0.5;
   min-height: 140px;
+}
+
+/* ── App shell layout ───────────────────────────────────────────────────────── */
+.app-shell { display: flex; min-height: 100vh; }
+.app-main  { flex: 1; min-width: 0; background: #F8FAFC; }
+@media (max-width: 768px) {
+  .app-main { margin-left: 0 !important; padding-top: 56px; padding-bottom: 70px; }
 }

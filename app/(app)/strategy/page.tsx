@@ -1,5 +1,6 @@
 'use client';
 
+import { useT } from '@/lib/i18n';
 import { useState, useEffect } from 'react';
 import { Trash2, Plus, Save } from 'lucide-react';
 import { useApp } from '@/lib/app-context';
@@ -22,6 +23,7 @@ interface ClassDraft {
 }
 
 export default function StrategyPage() {
+  const { t } = useT();
   const { strategy, classes, assets, portfolio, updateStrategy, addClass, deleteClass, updateClass } = useApp();
 
 
@@ -117,7 +119,7 @@ export default function StrategyPage() {
 
   return (
     <>
-      <PageHeader title="Estratégia" subtitle="Configure o motor de recomendação" />
+      <PageHeader title={t('strategy.title')} subtitle="Configure o motor de recomendação" />
       <PageContent>
 
         {/* ── ALOCAÇÃO POR CLASSE ── */}

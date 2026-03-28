@@ -1,5 +1,6 @@
 'use client';
 
+import { useT } from '@/lib/i18n';
 import { useMemo, useState } from 'react';
 import { Pencil, Trash2, Circle, ChevronDown, ChevronRight, ArrowUp, ArrowDown, TrendingUp, TrendingDown, Minus } from 'lucide-react';
 import { useApp } from '@/lib/app-context';
@@ -14,6 +15,7 @@ import { AssetModal } from '@/components/modals/AssetModal';
 import { ImportModal } from '@/components/modals/ImportModal';
 
 export default function PortfolioPage() {
+  const { t } = useT();
   const { assets, holdingsMap, classes, strategy, portfolio,
     addAsset, updateAsset, deleteAsset, toggleRed, addClass, deleteClass, syncPricesNow, priceMap,
     mode, planData } = useApp();
@@ -93,7 +95,7 @@ export default function PortfolioPage() {
   return (
     <>
       <PageHeader
-        title="Carteira"
+        title={t('portfolio.title')}
         subtitle={`${assets.length} ativos · ${formatCurrency(totalValue)}`}
         action={
           <div style={{ display: 'flex', gap: '10px' }}>

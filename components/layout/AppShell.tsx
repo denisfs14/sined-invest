@@ -27,24 +27,6 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <>
-      <style>{`
-        .app-shell {
-          display: flex;
-          min-height: 100vh;
-        }
-        .app-main {
-          flex: 1;
-          min-width: 0;
-          background: #F8FAFC;
-        }
-        @media (max-width: 768px) {
-          .app-main {
-            margin-left: 0 !important;
-            padding-top: 56px;
-            padding-bottom: 70px;
-          }
-        }
-      `}</style>
       <div className="app-shell">
         <Sidebar />
         <main className="app-main">

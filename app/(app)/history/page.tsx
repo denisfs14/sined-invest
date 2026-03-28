@@ -1,5 +1,6 @@
 'use client';
 
+import { useT } from '@/lib/i18n';
 import { UpgradeBanner, FeatureTeaser } from '@/components/ui/PlanGate';
 import { useState } from 'react';
 import { ChevronDown, ChevronUp, Trash2 } from 'lucide-react';
@@ -13,6 +14,7 @@ import {
 } from '@/components/ui';
 
 export default function HistoryPage() {
+  const { t } = useT();
   const { history, clearHistory } = useApp();
   const [expanded, setExpanded] = useState<string | null>(null);
   const [toast, setToast] = useState({ visible: false, msg: '' });
@@ -32,7 +34,7 @@ export default function HistoryPage() {
   return (
     <>
       <PageHeader
-        title="Histórico"
+        title={t('history.title')}
         subtitle={`${history.length} simulaç${history.length !== 1 ? 'ões' : 'ão'} salva${history.length !== 1 ? 's' : ''}`}
         action={history.length > 0 && (
           <Button variant="danger" size="sm" onClick={handleClear}>

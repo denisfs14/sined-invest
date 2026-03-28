@@ -1,19 +1,14 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase/client';
 
-// ─── Import all translation files statically ──────────────────────────────────
-// Dynamic import with variable paths fails in Next.js static export.
-// We import all locales at build time — tree-shaking keeps the bundle small.
-import en    from '@/messages/en.json';
-import ptBR  from '@/messages/pt-BR.json';
-import es    from '@/messages/es.json';
+import en   from '@/messages/en.json';
+import ptBR from '@/messages/pt-BR.json';
+import es   from '@/messages/es.json';
 
-// ─── Types ───────────────────────────────────────────────────────────────────
 export type Locale = 'en' | 'pt-BR' | 'es';
-
-type DeepRecord = { [key: string]: string | DeepRecord };
+type Messages = Record<string, Record<string, string>>;
 
 interface I18nContextValue {
   locale:    Locale;
@@ -21,83 +16,81 @@ interface I18nContextValue {
   t:         (key: string, vars?: Record<string, string | number>) => string;
 }
 
-// ─── All messages bundled synchronously ──────────────────────────────────────
-const ALL_MESSAGES: Record<Locale, DeepRecord> = {
-  'en':    en    as unknown as DeepRecord,
-  'pt-BR': ptBR  as unknown as DeepRecord,
-  'es':    es    as unknown as DeepRecord,
+const ALL: Record<Locale, Messages> = {
+  'en':    en    as Messages,
+  'pt-BR': ptBR  as Messages,
+  'es':    es    as Messages,
 };
 
 export const LOCALES: Locale[] = ['en', 'pt-BR', 'es'];
-const DEFAULT_LOCALE: Locale   = 'en';
-const STORAGE_KEY              = 'sined_locale';
+const DEFAULT: Locale           = 'en';
+const KEY                       = 'sined_locale';
 
-// ─── Context default ──────────────────────────────────────────────────────────
+// t() is created fresh per locale — guarantees stale-closure is impossible
+function makeT(locale: Locale) {
+  const msgs = ALL[locale] ?? ALL[DEFAULT];
+  return function t(key: string, vars?: Record<string, string | number>): string {
+    const [ns, ...rest] = key.split('.');
+    const section = msgs[ns];
+    if (!section) return key;
+    let val: string | Record<string, string> = section;
+    for (const part of rest) {
+      if (typeof val !== 'object') return key;
+      val = (val as Record<string, string>)[part];
+      if (val === undefined) return key;
+    }
+    if (typeof val !== 'string') return key;
+    if (!vars) return val;
+    return val.replace(/\{(\w+)\}/g, (_, k) => String(vars[k] ?? `{${k}}`));
+  };
+}
+
 const I18nContext = createContext<I18nContextValue>({
-  locale:    DEFAULT_LOCALE,
+  locale:    DEFAULT,
   setLocale: () => {},
-  t:         (key) => key,
+  t:         makeT(DEFAULT),
 });
 
-// ─── Resolve locale from localStorage ────────────────────────────────────────
-function getSavedLocale(): Locale {
-  if (typeof window === 'undefined') return DEFAULT_LOCALE;
+function savedLocale(): Locale {
+  if (typeof window === 'undefined') return DEFAULT;
   try {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved && LOCALES.includes(saved as Locale)) return saved as Locale;
+    const v = localStorage.getItem(KEY);
+    if (v && LOCALES.includes(v as Locale)) return v as Locale;
   } catch {}
-  return DEFAULT_LOCALE;
+  return DEFAULT;
 }
 
-// ─── Translation resolver ────────────────────────────────────────────────────
-function resolve(messages: DeepRecord, key: string, vars?: Record<string, string | number>): string {
-  const parts = key.split('.');
-  let node: string | DeepRecord = messages;
-  for (const part of parts) {
-    if (typeof node !== 'object' || node === null) return key;
-    node = (node as DeepRecord)[part];
-    if (node === undefined) return key;
-  }
-  if (typeof node !== 'string') return key;
-  if (!vars) return node;
-  return node.replace(/\{(\w+)\}/g, (_, k) => String(vars[k] ?? `{${k}}`));
-}
-
-// ─── Provider ─────────────────────────────────────────────────────────────────
 export function I18nProvider({ children }: { children: React.ReactNode }) {
-  const [locale, setLocaleState] = useState<Locale>(DEFAULT_LOCALE);
+  const [locale, setLocaleRaw] = useState<Locale>(DEFAULT);
+  const [t,      setT]         = useState(() => makeT(DEFAULT));
 
-  // Hydrate from localStorage on mount
+  // Hydrate from localStorage
   useEffect(() => {
-    const saved = getSavedLocale();
-    if (saved !== locale) setLocaleState(saved);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    const l = savedLocale();
+    if (l !== DEFAULT) {
+      setLocaleRaw(l);
+      setT(() => makeT(l));
+    }
   }, []);
 
-  // Also read from Supabase user metadata (overrides localStorage if set)
+  // Hydrate from Supabase user metadata (overrides localStorage)
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
-      const lang = user?.user_metadata?.language as Locale | undefined;
-      if (lang && LOCALES.includes(lang)) {
-        setLocaleState(lang);
-        try { localStorage.setItem(STORAGE_KEY, lang); } catch {}
+      const l = user?.user_metadata?.language as Locale | undefined;
+      if (l && LOCALES.includes(l)) {
+        setLocaleRaw(l);
+        setT(() => makeT(l));
+        try { localStorage.setItem(KEY, l); } catch {}
       }
     });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const setLocale = useCallback((newLocale: Locale) => {
-    setLocaleState(newLocale);
-    try { localStorage.setItem(STORAGE_KEY, newLocale); } catch {}
-    // Best-effort persist to Supabase
+  function setLocale(newLocale: Locale) {
+    setLocaleRaw(newLocale);
+    setT(() => makeT(newLocale)); // new t function → context value changes → all consumers re-render
+    try { localStorage.setItem(KEY, newLocale); } catch {}
     supabase.auth.updateUser({ data: { language: newLocale } }).catch(() => {});
-  }, []);
-
-  const messages = ALL_MESSAGES[locale] ?? ALL_MESSAGES[DEFAULT_LOCALE];
-
-  const t = useCallback((key: string, vars?: Record<string, string | number>): string => {
-    return resolve(messages, key, vars);
-  }, [messages]);
+  }
 
   return (
     <I18nContext.Provider value={{ locale, setLocale, t }}>

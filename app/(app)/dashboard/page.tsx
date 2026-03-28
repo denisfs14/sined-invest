@@ -34,9 +34,9 @@ export default function DashboardPage() {
   } = useApp();
 
   const { t } = useT();
-  const [syncing,    setSyncing]    = useState(false);
-  const [syncMsg,    setSyncMsg]    = useState('');
-  const [lastSyncAt, setLastSyncAt] = useState<Date | null>(null);
+  const [syncing,  setSyncing]  = useState(false);
+  const [syncMsg,  setSyncMsg]  = useState('');
+  const lastSyncRef = useRef<Date | null>(null); // ref, not state — avoids re-render
 
   // ── Guards ────────────────────────────────────────────────────────────────
   const isFetching   = useRef(false);  // prevent concurrent requests
@@ -50,7 +50,7 @@ export default function DashboardPage() {
     if (!silent) { setSyncing(true); setSyncMsg('Atualizando...'); }
     try {
       const res = await syncPricesNow();
-      setLastSyncAt(new Date());
+      lastSyncRef.current = new Date(); // ref update — no re-render
       if (!silent) {
         setSyncMsg(`✓ ${res.updated} preços`);
         setTimeout(() => setSyncMsg(''), 4000);
@@ -185,10 +185,7 @@ export default function DashboardPage() {
         subtitle={mode === 'advanced' ? t('dashboard.subtitle_advanced') : t('dashboard.subtitle_simple')}
         action={
           <div className="page-header-actions">
-            {syncMsg
-              ? <span style={{ fontSize: '11px', color: C.green, fontWeight: '600', opacity: 0.8 }}>{syncMsg}</span>
-              : lastSyncAt && <span style={{ fontSize: '11px', color: C.gray400 }}>⟳ {formatRelativeTime(lastSyncAt)}</span>
-            }
+            {syncMsg && <span style={{ fontSize: '11px', color: C.green, fontWeight: '600', opacity: 0.8 }}>{syncMsg}</span>}
             <ModeToggle compact />
             <Button variant="secondary" size="sm" onClick={() => runSync(false)} loading={syncing}>
               <RefreshCw size={13} /> {t('dashboard.sync_prices')}
@@ -803,8 +800,8 @@ function AdvancedModeLockTeaser({ totalValue, thisMonthDivs, classes, assets, ho
   ];
 
   return (
-    <div className="advanced-lock-outer">
-      {/* Blurred real data — stable min-height prevents layout shift */}
+    <div className="advanced-lock-outer" style={{ position: 'relative', minHeight: '200px' }}>
+      {/* Blurred real data — fixed height prevents layout shift on data changes */}
       <div className="advanced-lock-blur">
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '10px', marginBottom: '10px' }}>
           {items.map(({ label, val }) => (

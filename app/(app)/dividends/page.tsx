@@ -1,5 +1,6 @@
 'use client';
 
+import { useT } from '@/lib/i18n';
 import { useMemo, useState } from 'react';
 import { Pencil, Trash2, Plus } from 'lucide-react';
 import { useApp } from '@/lib/app-context';
@@ -14,6 +15,7 @@ import {
 import { DividendModal } from '@/components/modals/DividendModal';
 
 export default function DividendsPage() {
+  const { t } = useT();
   const { assets, dividends, portfolio, addDividend, updateDividend, deleteDividend, syncDividendsNow } = useApp();
 
   const [syncing, setSyncing] = useState(false);
@@ -45,7 +47,7 @@ export default function DividendsPage() {
   return (
     <>
       <PageHeader
-        title="Proventos"
+        title={t('dividends.title')}
         subtitle="Calendário de dividendos e janela de aporte"
         action={
           <div style={{ display: 'flex', gap: '10px' }}>

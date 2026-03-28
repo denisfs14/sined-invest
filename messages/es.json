@@ -181,5 +181,23 @@
     "en": "English",
     "pt-BR": "Português (BR)",
     "es": "Español"
+  },
+  "portfolio": {
+    "title": "Cartera",
+    "subtitle": "Tus activos y posiciones",
+    "import_btn": "Importar",
+    "add_btn": "Agregar Activo"
+  },
+  "history": {
+    "title": "Historial",
+    "subtitle": "Historial de simulaciones"
+  },
+  "operations": {
+    "title": "Operaciones",
+    "subtitle": "Compras, ventas y caja"
+  },
+  "dividends": {
+    "title": "Dividendos",
+    "subtitle": "Calendario de dividendos y ventana de aporte"
   }
 }

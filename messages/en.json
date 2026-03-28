@@ -181,5 +181,23 @@
     "en": "English",
     "pt-BR": "Português (BR)",
     "es": "Español"
+  },
+  "portfolio": {
+    "title": "Portfolio",
+    "subtitle": "Your assets and positions",
+    "import_btn": "Import",
+    "add_btn": "Add Asset"
+  },
+  "history": {
+    "title": "History",
+    "subtitle": "Simulation history"
+  },
+  "operations": {
+    "title": "Operations",
+    "subtitle": "Buy, sell and cash"
+  },
+  "dividends": {
+    "title": "Dividends",
+    "subtitle": "Dividend calendar and contribution window"
   }
 }

@@ -1,5 +1,6 @@
 'use client';
 
+import { useT } from '@/lib/i18n';
 import { useState, useMemo } from 'react';
 import { ShoppingCart, TrendingDown, Wallet, CheckCircle, Plus, Minus } from 'lucide-react';
 import { useApp } from '@/lib/app-context';
@@ -13,6 +14,7 @@ import {
 type Tab = 'buy' | 'sell' | 'cash';
 
 export default function OperationsPage() {
+  const { t } = useT();
   const {
     assets, holdingsMap, history, cashBalance, cashEvents,
     portfolio, executeBuy, executeSell, withdrawCash, depositCash,
@@ -145,7 +147,7 @@ export default function OperationsPage() {
   return (
     <>
       <PageHeader
-        title="Operações"
+        title={t('operations.title')}
         subtitle="Registre compras, vendas e gerencie seu saldo"
         action={
           <div style={{ display: 'flex', gap: '10px' }}>
