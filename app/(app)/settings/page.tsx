@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import { User, Lock, Bell, Trash2, LogOut, ChevronRight, CheckCircle } from 'lucide-react';
 import { useApp } from '@/lib/app-context';
 import { PlanBadge } from '@/components/ui/PlanGate';
+import { LanguageSwitcher } from '@/components/LanguageSwitcher';
+import { useT } from '@/lib/i18n';
 import { supabase } from '@/lib/supabase/client';
 import {
   PageHeader, PageContent, Card, CardHeader, CardBody,
@@ -14,6 +16,7 @@ import {
 export default function SettingsPage() {
   const { user, portfolio, resetPortfolio } = useApp();
   const router = useRouter();
+  const { t } = useT();
 
   const [toast, setToast]         = useState({ visible: false, msg: '', type: 'success' as 'success' | 'error' });
   const [loading, setLoading]     = useState(false);
@@ -146,6 +149,15 @@ export default function SettingsPage() {
                 </div>
                 <LogOut size={16} color={C.gray400} />
               </button>
+            </CardBody>
+          </Card>
+
+          {/* Language */}
+          <Card>
+            <CardHeader>🌐 {t('settings.language')}</CardHeader>
+            <CardBody>
+              <div style={{ marginBottom: '8px', fontSize: '12px', color: C.gray400 }}>{t('settings.language_desc')}</div>
+              <LanguageSwitcher />
             </CardBody>
           </Card>
 

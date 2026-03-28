@@ -22,11 +22,8 @@ interface ClassDraft {
 }
 
 export default function StrategyPage() {
-  const { strategy, classes, assets, portfolio, updateStrategy, addClass, deleteClass, updateClass, resetPortfolio } = useApp();
+  const { strategy, classes, assets, portfolio, updateStrategy, addClass, deleteClass, updateClass } = useApp();
 
-  const [showReset, setShowReset]   = useState(false);
-  const [resetWord, setResetWord]   = useState('');
-  const [resetting, setResetting]   = useState(false);
 
   // Draft state — editable, only saved on button click
   const [drafts, setDrafts]   = useState<ClassDraft[]>([]);
@@ -417,26 +414,7 @@ export default function StrategyPage() {
             </div>
           </CardBody>
         </Card>
-
-      {/* Danger Zone */}
-      <Card style={{ marginTop: '20px', border: `1px solid #FECACA` }}>
-        <CardHeader>⚠️ Zona de Perigo</CardHeader>
-        <CardBody>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div>
-              <div style={{ fontSize: '14px', fontWeight: '600', color: C.gray800 }}>Resetar Sistema</div>
-              <div style={{ fontSize: '12px', color: C.gray400, marginTop: '2px' }}>
-                Apaga todos os ativos, classes, operações, proventos e histórico. Mantém seu login.
-              </div>
-            </div>
-            <Button variant="danger" size="sm" onClick={() => setShowReset(true)}>
-              🗑 Resetar Sistema
-            </Button>
-          </div>
-        </CardBody>
-      </Card>
-
-      </PageContent>
+</PageContent>
 
       {/* Nova classe modal */}
       <Modal open={showClass} onClose={() => setShowClass(false)}
@@ -478,42 +456,7 @@ export default function StrategyPage() {
         </ModalFooter>
       </Modal>
 
-      {/* ── RESET MODAL ── */}
-      <Modal open={showReset} onClose={() => { setShowReset(false); setResetWord(''); }}
-        title="⚠️ Resetar Sistema" subtitle="Esta ação é irreversível" width={460}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <div style={{ padding: '14px 16px', background: '#FEF2F2', borderRadius: '10px', border: '1px solid #FECACA', fontSize: '13px', color: C.red, lineHeight: '1.8' }}>
-            <strong>Serão deletados permanentemente:</strong><br/>
-            Ativos · Classes · Holdings · Simulações<br/>
-            Operações · Proventos · Saldo disponível<br/><br/>
-            <strong style={{ color: C.green }}>Mantido:</strong> sua conta e login
-          </div>
-          <FormGroup label="Digite RESETAR para confirmar">
-            <Input
-              placeholder="RESETAR"
-              value={resetWord}
-              onChange={e => setResetWord(e.target.value.toUpperCase())}
-              style={{ borderColor: resetWord === 'RESETAR' ? C.red : undefined, textAlign: 'center', fontSize: '16px', fontWeight: '700', letterSpacing: '3px' }}
-            />
-          </FormGroup>
-        </div>
-        <ModalFooter>
-          <Button variant="ghost" onClick={() => { setShowReset(false); setResetWord(''); }}>Cancelar</Button>
-          <Button variant="danger" disabled={resetWord !== 'RESETAR'} loading={resetting}
-            onClick={async () => {
-              setResetting(true);
-              try {
-                await resetPortfolio();
-                notify('✓ Sistema resetado com sucesso.');
-              } catch { notify('Erro ao resetar. Tente novamente.'); }
-              setResetting(false);
-              setShowReset(false);
-              setResetWord('');
-            }}>
-            🗑️ Confirmar Reset Total
-          </Button>
-        </ModalFooter>
-      </Modal>
+
 
       <Toast message={toast.msg} type={toast.type} visible={toast.visible} />
     </>

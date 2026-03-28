@@ -56,3 +56,13 @@ export function isThisMonth(iso: string): boolean {
   const now = new Date();
   return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
 }
+
+// ─── Relative time ────────────────────────────────────────────────────────────
+export function formatRelativeTime(date: Date): string {
+  const diff = Math.floor((Date.now() - date.getTime()) / 1000);
+  if (diff < 10)  return 'agora mesmo';
+  if (diff < 60)  return `${diff}s atrás`;
+  const mins = Math.floor(diff / 60);
+  if (mins < 60)  return `${mins}min atrás`;
+  return `${Math.floor(mins / 60)}h atrás`;
+}

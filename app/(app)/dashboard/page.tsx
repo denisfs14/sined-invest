@@ -10,7 +10,7 @@ import {
 import { useApp } from '@/lib/app-context';
 import { Asset, AssetClass } from '@/types';
 import { calculateContributionWindow } from '@/lib/calculations/dividend-calendar';
-import { formatCurrency, formatPercent, formatDate, daysFromNow } from '@/utils/format';
+import { formatCurrency, formatPercent, formatDate, daysFromNow, formatRelativeTime } from '@/utils/format';
 import {
   StatCard, Card, CardHeader, CardBody, Badge, TickerBadge,
   EmptyState, PageHeader, PageContent, PercentBar, Button, C,
@@ -32,28 +32,71 @@ export default function DashboardPage() {
     mode, planData,
   } = useApp();
 
-  const [syncing, setSyncing] = useState(false);
-  const [syncMsg, setSyncMsg] = useState('');
+  const [syncing,    setSyncing]    = useState(false);
+  const [syncMsg,    setSyncMsg]    = useState('');
+  const [lastSyncAt, setLastSyncAt] = useState<Date | null>(null);
 
-  const runSync = useCallback(async () => {
-    if (syncing || assets.length === 0) return;
-    setSyncing(true);
-    setSyncMsg('Atualizando...');
+  // ── Guards ────────────────────────────────────────────────────────────────
+  const isFetching   = useRef(false);  // prevent concurrent requests
+  const hasSynced    = useRef(false);  // first-load flag
+  const intervalRef  = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const runSync = useCallback(async (silent = false) => {
+    // Guard: skip if already fetching or no assets
+    if (isFetching.current || assets.length === 0) return;
+    isFetching.current = true;
+    if (!silent) { setSyncing(true); setSyncMsg('Atualizando...'); }
     try {
       const res = await syncPricesNow();
-      setSyncMsg(`✓ ${res.updated} preços`);
-      setTimeout(() => setSyncMsg(''), 4000);
-    } catch { setSyncMsg('Erro'); }
-    finally { setSyncing(false); }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const hasSynced = useRef(false);
-  useEffect(() => {
-    if (!loading && assets.length > 0 && !hasSynced.current) {
-      hasSynced.current = true;
-      runSync();
+      setLastSyncAt(new Date());
+      if (!silent) {
+        setSyncMsg(`✓ ${res.updated} preços`);
+        setTimeout(() => setSyncMsg(''), 4000);
+      }
+    } catch {
+      if (!silent) setSyncMsg('Erro');
+    } finally {
+      isFetching.current = false;
+      if (!silent) setSyncing(false);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [assets.length]);
+
+  // ── Auto-refresh: 30s active tab, 5min hidden tab ─────────────────────────
+  useEffect(() => {
+    if (loading || assets.length === 0) return;
+
+    // Initial sync on first load
+    if (!hasSynced.current) {
+      hasSynced.current = true;
+      runSync(true);
+    }
+
+    function startPolling() {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+      const interval = document.hidden ? 5 * 60_000 : 30_000;
+      intervalRef.current = setInterval(() => {
+        if (!document.hidden) runSync(true);
+      }, interval);
+    }
+
+    startPolling();
+
+    // Page Visibility API — pause/slow when tab is hidden
+    function onVisibilityChange() {
+      if (!document.hidden) {
+        // Tab became visible — sync immediately then restart normal interval
+        runSync(true);
+      }
+      startPolling();
+    }
+
+    document.addEventListener('visibilitychange', onVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loading, assets.length]);
 
   // ── Derived values ────────────────────────────────────────────────────────
@@ -147,9 +190,12 @@ export default function DashboardPage() {
         subtitle={mode === 'advanced' ? 'Advanced Mode · Análise completa' : 'Simple Mode · Decisões rápidas'}
         action={
           <div className="page-header-actions">
-            {syncMsg && <span style={{ fontSize: '12px', color: syncing ? C.amber : C.green, fontWeight: '600' }}>{syncMsg}</span>}
+            {syncMsg
+              ? <span style={{ fontSize: '11px', color: C.green, fontWeight: '600', opacity: 0.8 }}>{syncMsg}</span>
+              : lastSyncAt && <span style={{ fontSize: '11px', color: C.gray400 }}>⟳ {formatRelativeTime(lastSyncAt)}</span>
+            }
             <ModeToggle compact />
-            <Button variant="secondary" size="sm" onClick={runSync} loading={syncing}>
+            <Button variant="secondary" size="sm" onClick={() => runSync(false)} loading={syncing}>
               <RefreshCw size={13} /> Preços
             </Button>
             <Link href="/contribution">
