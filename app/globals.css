@@ -1,0 +1,236 @@
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import "tailwindcss";
+
+:root {
+  --font: 'Sora', sans-serif;
+  --mono: 'JetBrains Mono', monospace;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: var(--font);
+  background: #F8FAFC;
+  color: #1E293B;
+  -webkit-font-smoothing: antialiased;
+}
+
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 3px; }
+
+@keyframes fadeIn  { from { opacity:0; transform:translateY(8px);  } to { opacity:1; transform:none; } }
+@keyframes scaleIn { from { opacity:0; transform:scale(0.96);      } to { opacity:1; transform:none; } }
+@keyframes slideIn { from { opacity:0; transform:translateX(-6px); } to { opacity:1; transform:none; } }
+
+.animate-fade  { animation: fadeIn  0.28s ease both; }
+.animate-scale { animation: scaleIn 0.22s ease both; }
+.animate-slide { animation: slideIn 0.2s  ease both; }
+
+.stagger > * { animation: fadeIn 0.28s ease both; }
+.stagger > *:nth-child(1) { animation-delay:   0ms; }
+.stagger > *:nth-child(2) { animation-delay:  55ms; }
+.stagger > *:nth-child(3) { animation-delay: 110ms; }
+.stagger > *:nth-child(4) { animation-delay: 165ms; }
+.stagger > *:nth-child(5) { animation-delay: 220ms; }
+.stagger > *:nth-child(6) { animation-delay: 275ms; }
+.stagger > *:nth-child(7) { animation-delay: 330ms; }
+.stagger > *:nth-child(8) { animation-delay: 385ms; }
+
+/* ── Mobile Responsive ────────────────────────────────────────────────────── */
+
+/* App layout */
+.app-layout {
+  display: flex;
+  min-height: 100vh;
+}
+
+.app-main {
+  flex: 1;
+  min-width: 0;
+  overflow-x: hidden;
+}
+
+@media (max-width: 768px) {
+  /* Push content down for fixed header and up for bottom nav */
+  .app-main {
+    padding-top: 56px;
+    padding-bottom: 72px;
+  }
+
+  /* Page headers */
+  .page-header {
+    padding: 16px !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 10px !important;
+  }
+
+  .page-header-action {
+    width: 100%;
+  }
+
+  .page-header-action > * {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* Page content */
+  .page-content {
+    padding: 12px 14px 16px !important;
+  }
+
+  /* Cards */
+  .card-body {
+    padding: 14px !important;
+  }
+
+  /* Stat cards grid */
+  .stat-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 10px !important;
+  }
+
+  /* Tables - horizontal scroll */
+  table {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Modals full screen on mobile */
+  .modal-overlay {
+    padding: 0 !important;
+    align-items: flex-end !important;
+  }
+
+  .modal-content {
+    border-radius: 20px 20px 0 0 !important;
+    max-height: 92vh !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  /* Buttons larger touch targets */
+  button, .btn {
+    min-height: 44px;
+  }
+
+  /* Input fields larger */
+  input, select, textarea {
+    font-size: 16px !important; /* prevents zoom on iOS */
+    min-height: 44px;
+  }
+
+  /* Two-col grids become single col */
+  .grid-2col {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Hide non-essential table columns */
+  .col-hide-mobile {
+    display: none !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .stat-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* Viewport meta equivalent via CSS */
+* {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+/* ── Mobile Fixes ─────────────────────────────────────────────────────────── */
+
+/* Fix 1: Page header actions — scroll horizontal no mobile */
+@media (max-width: 768px) {
+  .page-header { flex-direction: column !important; align-items: flex-start !important; height: auto !important; padding: 12px 14px !important; gap: 8px; }
+  .page-header-actions { display: flex !important; gap: 6px !important; overflow-x: auto !important; width: 100% !important; flex-wrap: nowrap !important; padding-bottom: 2px; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+  .page-header-actions::-webkit-scrollbar { display: none; }
+  .page-header-actions > * { flex-shrink: 0 !important; }
+}
+
+/* Fix 2: StatCards — 2 cols on mobile */
+@media (max-width: 768px) {
+  .stat-cards-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 8px !important; }
+  .stat-card-value { font-size: 18px !important; }
+}
+
+/* Fix 3: Tables — horizontal scroll with hint */
+@media (max-width: 768px) {
+  .table-scroll-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; position: relative; }
+  .table-scroll-wrapper::after { content: ''; position: absolute; right: 0; top: 0; bottom: 0; width: 24px; background: linear-gradient(to right, transparent, rgba(255,255,255,0.9)); pointer-events: none; }
+  table { min-width: 580px; }
+}
+
+/* Fix 4: Contribution page — stack inputs on mobile */
+@media (max-width: 768px) {
+  .contribution-inputs { grid-template-columns: 1fr !important; }
+  .contribution-calc-btn { width: 100% !important; }
+}
+
+/* Fix 5: Hide less critical table columns on mobile */
+@media (max-width: 768px) {
+  .hide-mobile { display: none !important; }
+  .card-body { padding: 12px !important; }
+}
+
+/* ── Targeted Mobile Fixes from Screenshots ─────────────────────────────── */
+@media (max-width: 768px) {
+  /* Dashboard 2-col -> 1-col */
+  .dash-two-col { grid-template-columns: 1fr !important; }
+
+  /* Janela de aporte card - wrap content */
+  .janela-card-inner { flex-wrap: wrap !important; }
+  .janela-card-inner .janela-text { font-size: 20px !important; line-height: 1.3 !important; }
+  .janela-card-btn { width: 100% !important; margin-top: 12px; }
+
+  /* RecommendationDisplay - stack layout */
+  .rec-item-inner { flex-wrap: wrap !important; gap: 8px !important; }
+  .rec-item-metrics { flex-wrap: wrap !important; gap: 8px !important; }
+  .rec-item-sobra { display: none !important; } /* Hide sobra col on mobile - shown in summary */
+
+  /* Proventos table - compact date display */
+  .div-table-date { white-space: nowrap !important; }
+
+  /* Operations stat cards - 2 col */
+  .ops-stat-grid { grid-template-columns: repeat(2, 1fr) !important; }
+  
+  /* Proventos stat row - 2 col */
+  .prov-stat-grid { grid-template-columns: repeat(2, 1fr) !important; }
+
+  /* Fix any horizontal overflow */
+  .page-content > * { max-width: 100%; overflow-x: hidden; }
+}
+
+/* ── RecommendationDisplay Mobile ──────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .rec-item {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    padding: 14px 16px !important;
+    gap: 12px !important;
+  }
+  .rec-item-left { width: 100%; }
+  .rec-item-right {
+    width: 100%;
+    justify-content: space-between !important;
+    gap: 8px !important;
+    padding-top: 10px;
+    border-top: 1px solid #f1f5f9;
+  }
+}
+
+/* ── Dashboard action cards mobile ─────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .action-cards-grid { grid-template-columns: 1fr !important; gap: 8px !important; }
+  .onboard-grid      { grid-template-columns: 1fr !important; }
+}
+@media (min-width: 480px) and (max-width: 768px) {
+  .action-cards-grid { grid-template-columns: 1fr 1fr !important; }
+}
