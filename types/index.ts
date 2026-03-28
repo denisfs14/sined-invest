@@ -91,18 +91,39 @@ export interface StrategySettings {
 }
 
 // ─── Dividends ────────────────────────────────────────────────────────────────
-export type DividendStatus = 'expected' | 'received' | 'pending' | 'canceled';
+// Status lifecycle:
+//   announced → entitled → paid
+//   (legacy aliases: expected = announced/entitled, received = paid, pending = entitled)
+export type DividendStatus =
+  | 'announced'  // event declared, ex-date in future — user NOT yet entitled
+  | 'entitled'   // ex-date passed — user IS entitled, payment not yet received
+  | 'paid'       // payment_date passed AND confirmed received
+  | 'expected'   // legacy alias for announced/entitled (kept for backward compat)
+  | 'received'   // legacy alias for paid (kept for backward compat)
+  | 'pending'    // legacy alias for entitled
+  | 'canceled';  // event canceled by company
 
 export interface DividendEvent {
-  id: string;
-  asset_id: string;
-  portfolio_id: string;
-  ex_date: string;
-  payment_date: string;
-  expected_amount: number;
-  received_amount: number;
-  status: DividendStatus;
-  asset?: Asset;
+  id:                    string;
+  asset_id:              string;
+  portfolio_id:          string;
+  // ex_date: the date by which you must hold shares to be entitled.
+  // CRITICAL: this is NOT the same as payment_date.
+  // If unknown / legacy data, may be null.
+  ex_date:               string | null;
+  payment_date:          string;
+  // amount_per_unit: canonical per-share/unit value from data source.
+  // Optional for backward compat with legacy events that only stored totals.
+  amount_per_unit?:      number;        // value per share/quota
+  quantity_on_ex_date?:  number;        // qty held when ex_date passed (snapshot)
+  expected_amount:       number;        // amount_per_unit × quantity_on_ex_date (or manually entered)
+  received_amount:       number;        // confirmed received (0 until paid)
+  status:                DividendStatus;
+  data_source?:          string;        // 'brapi' | 'yahoo' | 'manual' | 'unknown'
+  // Data quality flags — optional for legacy events
+  ex_date_estimated?:    boolean;       // true if ex_date was inferred, not from source
+  qty_is_snapshot?:      boolean;       // true if quantity_on_ex_date is a real snapshot
+  asset?:                Asset;
 }
 
 // ─── Enriched / Computed ──────────────────────────────────────────────────────

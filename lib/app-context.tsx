@@ -7,7 +7,7 @@ import { Asset, AssetClass, DividendEvent, Operation, CashEvent, Portfolio, Purc
 import { supabase } from '@/lib/supabase/client';
 import * as db from '@/services/supabase.service';
 import { syncRedFlags, fetchOperations, fetchCashBalance, fetchCashEvents } from '@/services/supabase.service';
-import { syncPrices, syncDividends } from '@/services/price-sync.service';
+import { syncPrices, syncDividends, reconcileDividendStatuses } from '@/services/price-sync.service';
 import { getUserPlanData } from '@/lib/plan-access';
 import type { Plan, Mode, UserPlan } from '@/types/plan';
 

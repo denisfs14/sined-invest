@@ -1,6 +1,5 @@
 'use client';
 import { logger } from '@/utils/logger';
-
 import { supabase } from '@/lib/supabase/client';
 import { Asset } from '@/types';
 
@@ -56,13 +55,17 @@ export async function syncPrices(assets: Asset[]): Promise<{
   return { updated, failed, quoteMap };
 }
 
-// ─── Fetch dividends via brapi with dividends=true ───────────────────────────
-// Note: requires paid plan for dividends=true
-// Alternative: use the /api/quote/{ticker}?dividends=true endpoint
-// which IS included in some brapi plans at lower tiers
-async function fetchBrapiDividends(ticker: string): Promise<{ paymentDate: string; value: number }[]> {
+// ─── Raw dividend data from provider ─────────────────────────────────────────
+interface RawDividend {
+  paymentDate:   string;          // ISO date YYYY-MM-DD
+  exDate:        string | null;   // may be absent from provider
+  amountPerUnit: number;          // per-share value (canonical)
+  source:        string;
+}
+
+// ─── brapi — try dividends endpoint (paid plan) ───────────────────────────────
+async function fetchBrapiDividends(ticker: string): Promise<RawDividend[]> {
   try {
-    // Try with dividends=true - works on some plans
     const res = await fetch(
       `${BRAPI_BASE}/quote/${ticker}?token=${BRAPI_TOKEN}&dividends=true`,
       { cache: 'no-store' }
@@ -75,37 +78,56 @@ async function fetchBrapiDividends(ticker: string): Promise<{ paymentDate: strin
     return divs
       .filter((d: Record<string, unknown>) => (d.value || d.rate) && d.paymentDate)
       .map((d: Record<string, unknown>) => ({
-        paymentDate: String(d.paymentDate).slice(0, 10),
-        value: Number(d.value ?? d.rate ?? 0),
+        paymentDate:   String(d.paymentDate).slice(0, 10),
+        // brapi may provide approvedOn or declarationDate as ex_date proxy
+        exDate:        d.approvedOn
+          ? String(d.approvedOn).slice(0, 10)
+          : d.lastDatePrior
+          ? String(d.lastDatePrior).slice(0, 10)
+          : null,
+        amountPerUnit: Number(d.value ?? d.rate ?? 0),
+        source:        'brapi',
       }));
   } catch {
     return [];
   }
 }
 
-// ─── Fetch dividends via allorigin CORS proxy → Yahoo Finance ─────────────────
-// Uses allorigins.win as a free CORS proxy to bypass browser restrictions
-async function fetchYahooDividends(ticker: string): Promise<{ paymentDate: string; value: number }[]> {
+// ─── Yahoo Finance via allorigins CORS proxy ──────────────────────────────────
+// Yahoo returns ex-dividend dates under the 'dividends' events key.
+// The date field IS the ex-date; amount is per-unit.
+// Payment date is NOT available from Yahoo — we estimate it.
+async function fetchYahooDividends(ticker: string): Promise<RawDividend[]> {
   try {
-    const symbol  = `${ticker}.SA`;
-    const now     = Math.floor(Date.now() / 1000);
-    const yearAgo = now - 365 * 24 * 3600;
-    const yahooUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?events=dividends&interval=1mo&period1=${yearAgo}&period2=${now}`;
+    const symbol   = `${ticker}.SA`;
+    const now      = Math.floor(Date.now() / 1000);
+    const yearAgo  = now - 365 * 24 * 3600;
+    const future   = now + 90 * 24 * 3600;
+    const yahooUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?events=dividends&interval=1mo&period1=${yearAgo}&period2=${future}`;
 
-    // Use allorigins as CORS proxy
     const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(yahooUrl)}`;
     const res      = await fetch(proxyUrl, { cache: 'no-store' });
     if (!res.ok) return [];
 
     const proxy = await res.json();
-    const data  = JSON.parse(proxy.contents ?? '{}');
-    const divs  = data?.chart?.result?.[0]?.events?.dividends ?? {};
+    const parsed = JSON.parse(proxy.contents ?? '{}');
+
+    // Yahoo dividends event: { date: unix_timestamp, amount: per_unit }
+    // The 'date' field in Yahoo dividends is the EX-DATE, not payment date.
+    const divs = parsed?.chart?.result?.[0]?.events?.dividends ?? {};
 
     return Object.values(divs).map((d: unknown) => {
-      const div = d as { date: number; amount: number };
+      const div    = d as { date: number; amount: number };
+      const exDate = new Date(div.date * 1000).toISOString().slice(0, 10);
+      // Estimate payment date: FIIs typically pay ~5 business days after ex-date.
+      // Stocks typically ~30 days after. We use ex+5 as a safe estimate,
+      // and flag it as estimated so the UI can show a warning.
+      const paymentEst = estimatePaymentDate(exDate);
       return {
-        paymentDate: new Date(div.date * 1000).toISOString().slice(0, 10),
-        value: div.amount,
+        paymentDate:   paymentEst,
+        exDate:        exDate,       // THIS is the actual ex-date from Yahoo
+        amountPerUnit: div.amount,
+        source:        'yahoo',
       };
     });
   } catch (e) {
@@ -114,7 +136,45 @@ async function fetchYahooDividends(ticker: string): Promise<{ paymentDate: strin
   }
 }
 
-// ─── Main sync dividends function ────────────────────────────────────────────
+// ─── Estimate payment date from ex-date ──────────────────────────────────────
+// FIIs: typically pay 5 business days (≈7 calendar days) after ex-date
+// Stocks: typically 30 calendar days after ex-date
+// Without asset type info, use a conservative 5-day estimate.
+function estimatePaymentDate(exDateStr: string): string {
+  const d = new Date(exDateStr);
+  d.setDate(d.getDate() + 5);
+  return d.toISOString().slice(0, 10);
+}
+
+// ─── Determine event status from dates ───────────────────────────────────────
+// Uses precise lifecycle:
+//   announced → ex_date in future → user not yet entitled
+//   entitled  → ex_date passed, payment_date in future → user IS entitled
+//   paid      → payment_date passed → user should have received it
+function deriveStatus(exDate: string | null, paymentDate: string): string {
+  const now         = new Date();
+  now.setHours(0, 0, 0, 0);
+  const payDt = new Date(paymentDate);
+  payDt.setHours(0, 0, 0, 0);
+
+  if (payDt < now) {
+    return 'paid'; // payment date has passed — treat as received
+  }
+
+  if (exDate) {
+    const exDt = new Date(exDate);
+    exDt.setHours(0, 0, 0, 0);
+    if (exDt < now) {
+      return 'entitled'; // ex-date passed, not yet paid
+    }
+    return 'announced'; // ex-date in future
+  }
+
+  // No ex_date known — can only go by payment date
+  return 'expected'; // legacy fallback
+}
+
+// ─── Main sync dividends function ─────────────────────────────────────────────
 export async function syncDividends(
   assets: Asset[],
   portfolioId: string
@@ -126,53 +186,77 @@ export async function syncDividends(
     a.active && !a.ticker.toLowerCase().startsWith('tesouro')
   );
 
-  const cutoff = new Date();
-  cutoff.setMonth(cutoff.getMonth() - 12);
-  const future = new Date();
-  future.setMonth(future.getMonth() + 3);
+  const now    = new Date();
+  const cutoff = new Date(now); cutoff.setMonth(cutoff.getMonth() - 13);
+  const future = new Date(now); future.setMonth(future.getMonth() + 3);
 
   for (const asset of eligible) {
     try {
+      // Get current holdings quantity (best proxy we have for qty on ex-date)
       const { data: holding } = await supabase
         .from('holdings').select('quantity').eq('asset_id', asset.id).maybeSingle();
-      const qty = holding?.quantity ?? 0;
-      if (qty <= 0) continue;
+      const currentQty = holding?.quantity ?? 0;
+      if (currentQty <= 0) continue;
 
+      // Fetch existing events to avoid duplication
+      // Dedup key: (asset_id, ex_date, payment_date) — not just payment_date
       const { data: existing } = await supabase
-        .from('dividend_events').select('payment_date').eq('asset_id', asset.id);
-      const existingDates = new Set(
-        (existing ?? []).map((e: { payment_date: string }) => e.payment_date)
+        .from('dividend_events')
+        .select('ex_date, payment_date')
+        .eq('asset_id', asset.id);
+
+      const existingKeys = new Set(
+        (existing ?? []).map((e: { ex_date: string | null; payment_date: string }) =>
+          `${e.ex_date ?? 'null'}|${e.payment_date}`
+        )
       );
 
-      // Try brapi first (works if plan supports it), fallback to Yahoo Finance via proxy
-      let divs = await fetchBrapiDividends(asset.ticker);
-      if (divs.length === 0) {
-        divs = await fetchYahooDividends(asset.ticker);
+      // Fetch from providers
+      let raws: RawDividend[] = await fetchBrapiDividends(asset.ticker);
+      if (raws.length === 0) {
+        raws = await fetchYahooDividends(asset.ticker);
       }
-
-      if (divs.length === 0) {
-        // No dividends found for this asset (could be ETF or no data)
-        continue;
-      }
+      if (raws.length === 0) continue;
 
       const toInsert = [];
-      for (const d of divs) {
-        const dt = new Date(d.paymentDate);
-        if (dt < cutoff || dt > future) continue;
-        if (existingDates.has(d.paymentDate)) continue;
-        if (!d.value || d.value <= 0) continue;
+      for (const raw of raws) {
+        if (!raw.amountPerUnit || raw.amountPerUnit <= 0) continue;
 
-        const total  = Math.round(d.value * qty * 100) / 100;
-        const isPast = dt <= new Date();
+        const payDt = new Date(raw.paymentDate);
+        if (payDt < cutoff || payDt > future) continue;
+
+        // Dedup check using composite key
+        const key = `${raw.exDate ?? 'null'}|${raw.paymentDate}`;
+        if (existingKeys.has(key)) continue;
+
+        const status = deriveStatus(raw.exDate, raw.paymentDate);
+
+        // expected_amount = amount_per_unit × quantity
+        // We use current qty as the best available proxy.
+        // qty_is_snapshot=false signals this is current qty, not a historical snapshot.
+        const expectedTotal = Math.round(raw.amountPerUnit * currentQty * 100) / 100;
+
+        // received_amount is ONLY set when status is 'paid' — never assume received otherwise
+        const receivedAmount = status === 'paid' ? expectedTotal : 0;
+
+        // ex_date_estimated: true when we inferred ex_date from Yahoo's 'date' field
+        // (Yahoo's 'date' in the dividends event IS the ex-date, so it's NOT estimated)
+        // It IS estimated when we computed it from paymentDate for brapi without exDate
+        const exDateEstimated = raw.source === 'brapi' && raw.exDate === null;
 
         toInsert.push({
-          asset_id:        asset.id,
-          portfolio_id:    portfolioId,
-          ex_date:         d.paymentDate,
-          payment_date:    d.paymentDate,
-          expected_amount: total,
-          received_amount: isPast ? total : 0,
-          status:          isPast ? 'received' : 'expected',
+          asset_id:            asset.id,
+          portfolio_id:        portfolioId,
+          ex_date:             raw.exDate,
+          payment_date:        raw.paymentDate,
+          amount_per_unit:     raw.amountPerUnit,
+          quantity_on_ex_date: currentQty,
+          expected_amount:     expectedTotal,
+          received_amount:     receivedAmount,
+          status,
+          data_source:         raw.source,
+          ex_date_estimated:   exDateEstimated,
+          qty_is_snapshot:     false,   // we used current qty, not a historical snapshot
         });
       }
 
@@ -189,4 +273,33 @@ export async function syncDividends(
   }
 
   return { synced, errors };
+}
+
+// ─── Re-evaluate status for existing events ───────────────────────────────────
+// Call this to update stale 'expected'/'entitled' events after their dates pass.
+// Run this on app load or dividend page open.
+export async function reconcileDividendStatuses(portfolioId: string): Promise<void> {
+  const { data: events } = await supabase
+    .from('dividend_events')
+    .select('id, ex_date, payment_date, status, expected_amount')
+    .eq('portfolio_id', portfolioId)
+    .in('status', ['expected', 'announced', 'entitled', 'pending']);
+
+  if (!events || events.length === 0) return;
+
+  for (const ev of events) {
+    const newStatus = deriveStatus(ev.ex_date, ev.payment_date);
+    if (newStatus === ev.status) continue;
+
+    const update: Record<string, unknown> = { status: newStatus };
+    // When transitioning to 'paid', set received_amount if not already set
+    if (newStatus === 'paid') {
+      update.received_amount = ev.expected_amount;
+    }
+
+    await supabase
+      .from('dividend_events')
+      .update(update)
+      .eq('id', ev.id);
+  }
 }

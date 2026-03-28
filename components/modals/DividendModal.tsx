@@ -44,13 +44,19 @@ export function DividendModal({ open, onClose, onSave, onUpdate, assets, portfol
     if (!f.payment_date) return alert('Informe a data de pagamento');
 
     const data: Omit<DividendEvent, 'id'> = {
-      asset_id: f.asset_id,
-      portfolio_id: portfolioId,
-      ex_date: f.ex_date,
-      payment_date: f.payment_date,
-      expected_amount: parseFloat(f.expected_amount) || 0,
-      received_amount: parseFloat(f.received_amount) || 0,
-      status: f.status,
+      asset_id:            f.asset_id,
+      portfolio_id:        portfolioId,
+      ex_date:             f.ex_date || null,
+      payment_date:        f.payment_date,
+      expected_amount:     parseFloat(f.expected_amount) || 0,
+      received_amount:     parseFloat(f.received_amount) || 0,
+      status:              f.status,
+      // Manual entry defaults — amount_per_unit computed from expected if possible
+      amount_per_unit:     parseFloat(f.expected_amount) || 0, // user enters total; no qty context
+      quantity_on_ex_date: 0,      // unknown for manual entry
+      data_source:         'manual',
+      ex_date_estimated:   !f.ex_date, // estimated if no ex_date provided
+      qty_is_snapshot:     false,   // not a historical snapshot
     };
 
     if (edit && onUpdate) onUpdate(edit.id, data);
