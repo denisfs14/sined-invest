@@ -43,11 +43,11 @@ export const PLANS: PlanConfig[] = [
   {
     id: 'free', mode: 'demo',
     name: 'Free', badge: 'FREE',
-    price: 'Grátis', priceYearly: 'Grátis',
+    price: 'Free', priceYearly: 'Free',
     color: '#64748b',
     tagline: 'Experimente sem compromisso',
     description: 'Acesso limitado para conhecer o sistema antes de assinar.',
-    cta: 'Começar grátis',
+    cta: 'Get started free',
     features: [
       'Dashboard com dados parciais',
       'Preços em tempo real (limitado)',
@@ -64,11 +64,11 @@ export const PLANS: PlanConfig[] = [
   {
     id: 'simple', mode: 'simple',
     name: 'Simple', badge: 'SIMPLE',
-    price: 'R$ 19/mês', priceYearly: 'R$ 15/mês',
+    price: '$9/month', priceYearly: '$7/month',
     color: '#1748c0',
     tagline: 'Decisões rápidas e assertivas',
     description: 'Tudo que você precisa para aportar com inteligência. Simples e eficaz.',
-    cta: 'Assinar Simple',
+    cta: 'Get Simple',
     features: [
       'Carteira ilimitada de ativos',
       'Motor de recomendação completo',
@@ -83,11 +83,11 @@ export const PLANS: PlanConfig[] = [
   {
     id: 'advanced', mode: 'advanced',
     name: 'Advanced', badge: 'ADVANCED',
-    price: 'R$ 49/mês', priceYearly: 'R$ 39/mês',
+    price: '$19/month', priceYearly: '$15/month',
     color: '#c9a84c',
     tagline: 'Controle total e análise profunda',
     description: 'Para quem quer o máximo do sistema. Analytics, exportações e visão completa.',
-    cta: 'Assinar Advanced',
+    cta: 'Get Advanced',
     features: [
       'Tudo do Simple',
       'Análise P&L por ativo e classe',

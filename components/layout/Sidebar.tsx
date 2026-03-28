@@ -14,7 +14,7 @@ import { useApp } from '@/lib/app-context';
 import { useT } from '@/lib/i18n';
 import { ModeBadge } from '@/components/ui/PlanGate';
 import { ModeToggle } from '@/components/ModeToggle';
-import { getUserPlan } from '@/lib/plans';
+import { bridgePlan } from '@/lib/plan-access';
 
 // NAV is now computed inside the component using t()
 
@@ -24,7 +24,8 @@ import { getUserPlan } from '@/lib/plans';
 export function Sidebar() {
   const pathname  = usePathname();
   const router    = useRouter();
-  const { user }  = useApp();
+  const { user, planData } = useApp();
+  const effectivePlan = bridgePlan(planData.plan); // 'free'|'simple'|'advanced'
   const { t }     = useT();
   const MOBILE_NAV = [
     { href: '/dashboard',    label: t('nav.dashboard'), icon: LayoutDashboard },
@@ -138,7 +139,7 @@ export function Sidebar() {
           </div>
 
           {/* Upgrade CTA — only for free plan */}
-          {getUserPlan() === 'free' && (
+          {effectivePlan !== 'advanced' && (
             <Link href="/upgrade" style={{ textDecoration: 'none', display: 'block', marginBottom: '8px' }}>
               <div style={{
                 padding: '10px 14px', borderRadius: '10px',
@@ -149,7 +150,7 @@ export function Sidebar() {
                 <Star size={14} color="#c9a84c" fill="#c9a84c" style={{ flexShrink: 0 }} />
                 <div style={{ minWidth: 0 }}>
                   <div style={{ fontSize: '12px', fontWeight: '800', color: '#c9a84c', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{t('nav.upgrade_pro')}</div>
-                  <div style={{ fontSize: '10px', color: 'rgba(255,255,255,.35)', marginTop: '1px' }}>R$ 29/mês</div>
+                  <div style={{ fontSize: '10px', color: 'rgba(255,255,255,.35)', marginTop: '1px' }}>{effectivePlan === 'simple' ? '$19/mo' : '$9/mo'}</div>
                 </div>
               </div>
             </Link>
@@ -228,7 +229,7 @@ export function Sidebar() {
           </div>
 
           {/* Upgrade CTA for free users */}
-          {getUserPlan() === 'free' && (
+          {effectivePlan !== 'advanced' && (
             <Link href="/upgrade" style={{ textDecoration: 'none', display: 'block', margin: '0 0 6px' }}>
               <div style={{
                 padding: '8px 14px', borderRadius: '8px',
@@ -239,7 +240,7 @@ export function Sidebar() {
                 <Star size={12} color="#c9a84c" fill="#c9a84c" />
                 <div>
                   <div style={{ fontSize: '11px', fontWeight: '700', color: '#c9a84c' }}>{t('nav.upgrade_pro')}</div>
-                  <div style={{ fontSize: '10px', color: 'rgba(255,255,255,.3)' }}>R$ 29/mês</div>
+                  <div style={{ fontSize: '10px', color: 'rgba(255,255,255,.3)' }}>{effectivePlan === 'simple' ? '$19/mo' : '$9/mo'}</div>
                 </div>
               </div>
             </Link>

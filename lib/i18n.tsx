@@ -23,7 +23,7 @@ const ALL: Record<Locale, Messages> = {
 };
 
 export const LOCALES: Locale[] = ['en', 'pt-BR', 'es'];
-const DEFAULT: Locale           = 'en';
+const DEFAULT: Locale           = 'pt-BR';
 const KEY                       = 'sined_locale';
 
 // t() is created fresh per locale — guarantees stale-closure is impossible
@@ -64,13 +64,11 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
   const [locale, setLocaleRaw] = useState<Locale>(DEFAULT);
   const [t,      setT]         = useState(() => makeT(DEFAULT));
 
-  // Hydrate from localStorage
+  // Hydrate from localStorage on mount — always apply saved locale
   useEffect(() => {
     const l = savedLocale();
-    if (l !== DEFAULT) {
-      setLocaleRaw(l);
-      setT(() => makeT(l));
-    }
+    setLocaleRaw(l);
+    setT(() => makeT(l));
   }, []);
 
   // Hydrate from Supabase user metadata (overrides localStorage)

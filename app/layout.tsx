@@ -19,7 +19,7 @@ export const viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="pt-BR">
       <body>
         {/* SheetJS for XLSX reading in browser */}
         <Script
