@@ -12,7 +12,7 @@
     "analysis": "Analysis",
     "config": "Configuration",
     "upgrade_pro": "Upgrade to Pro",
-    "per_month": "$9/mo"
+    "per_month": "$5/mo"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -73,7 +73,7 @@
     "advanced_features_list": "Projected income · Real yield · P&L per asset",
     "advanced_features_more": "Allocation by class · Unlimited history · Export",
     "unlock_advanced_btn": "Unlock Advanced Mode →",
-    "per_month_cancel": "$19/month · Cancel anytime",
+    "per_month_cancel": "$12/month · Cancel anytime",
     "top_class": "Top Class",
     "projected_income_12m": "Projected Income 12m",
     "avg_monthly_yield": "Avg Monthly Yield",
@@ -165,7 +165,7 @@
     "lock_features": "Projected income · Real yield · P&L per asset",
     "lock_features2": "Allocation by class · Unlimited history · Export",
     "lock_btn": "Unlock Advanced Mode →",
-    "lock_price": "$19/month · Cancel anytime",
+    "lock_price": "$12/month · Cancel anytime",
     "lock_top_class": "Top Class",
     "lock_income_12m": "Projected Income 12m",
     "lock_yield_avg": "Avg Monthly Yield",
@@ -195,7 +195,7 @@
     "lock_title_inner": "✦ Advanced Mode — Locked",
     "lock_subtitle_inner": "Unlock full analysis",
     "lock_btn_inner": "Unlock Advanced Mode →",
-    "lock_price_inner": "$19/month · Cancel anytime",
+    "lock_price_inner": "$12/month · Cancel anytime",
     "lock_pnl_total": "P&L Total",
     "lock_by_class_lbl": "By Class",
     "buy_ticker_before": "Buy {ticker} before {date}",
@@ -508,7 +508,12 @@
     "removed_ok": "Dividend removed",
     "add_btn_short": "Register",
     "add_btn_full": "+ Register",
-    "calendar_title": "📅 Dividend Calendar"
+    "calendar_title": "📅 Dividend Calendar",
+    "history_title": "6-Month History",
+    "history_event": "event",
+    "history_events_pl": "events",
+    "history_expected": "Expected",
+    "current_month_title": "This Month — Detailed"
   },
   "modals": {
     "edit_asset": "Edit Asset",

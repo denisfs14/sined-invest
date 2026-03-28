@@ -12,7 +12,7 @@
     "analysis": "Análisis",
     "config": "Configuración",
     "upgrade_pro": "Mejorar a Pro",
-    "per_month": "$9/mo"
+    "per_month": "$5/mo"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -73,7 +73,7 @@
     "advanced_features_list": "Renta proyectada · Yield real · P&L por activo",
     "advanced_features_more": "Asignación por clase · Historial ilimitado · Exportación",
     "unlock_advanced_btn": "Desbloquear Advanced Mode →",
-    "per_month_cancel": "$19/month · Cancel anytime",
+    "per_month_cancel": "$12/month · Cancel anytime",
     "top_class": "Clase Principal",
     "projected_income_12m": "Renta Proyectada 12m",
     "avg_monthly_yield": "Yield Promedio Mensual",
@@ -165,7 +165,7 @@
     "lock_features": "Renta proyectada · Yield real · P&L por activo",
     "lock_features2": "Asignación por clase · Historial ilimitado · Exportación",
     "lock_btn": "Desbloquear Advanced Mode →",
-    "lock_price": "$19/month · Cancel anytime",
+    "lock_price": "$12/month · Cancel anytime",
     "lock_top_class": "Clase Principal",
     "lock_income_12m": "Renta Proyectada 12m",
     "lock_yield_avg": "Yield Promedio Mensual",
@@ -195,7 +195,7 @@
     "lock_title_inner": "✦ Advanced Mode — Bloqueado",
     "lock_subtitle_inner": "Desbloquea el análisis completo",
     "lock_btn_inner": "Desbloquear Advanced Mode →",
-    "lock_price_inner": "$19/month · Cancel anytime",
+    "lock_price_inner": "$12/month · Cancel anytime",
     "lock_pnl_total": "P&L Total",
     "lock_by_class_lbl": "Por Clase",
     "buy_ticker_before": "Comprar {ticker} antes del {date}",
@@ -508,7 +508,12 @@
     "removed_ok": "Dividendo eliminado",
     "add_btn_short": "Registrar",
     "add_btn_full": "+ Registrar",
-    "calendar_title": "📅 Calendario de Dividendos"
+    "calendar_title": "📅 Calendario de Dividendos",
+    "history_title": "Historial de Dividendos — Últimos 6 Meses",
+    "history_event": "evento",
+    "history_events_pl": "eventos",
+    "history_expected": "Esperado",
+    "current_month_title": "Este Mes — Detallado"
   },
   "modals": {
     "edit_asset": "Editar Activo",

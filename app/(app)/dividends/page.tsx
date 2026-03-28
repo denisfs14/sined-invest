@@ -41,6 +41,38 @@ export default function DividendsPage() {
     [dividends]
   );
 
+  // Current-month detailed events (for the detailed section)
+  const currentMonthEvents = useMemo(
+    () => sorted.filter(d => isThisMonth(d.payment_date)),
+    [sorted]
+  );
+
+  // Previous 6 months — summary totals only (NOT including current month)
+  const sixMonthHistory = useMemo(() => {
+    const now   = new Date();
+    const months: { key: string; label: string; total: number; received: number; count: number }[] = [];
+
+    for (let offset = 1; offset <= 6; offset++) {
+      const d = new Date(now.getFullYear(), now.getMonth() - offset, 1);
+      const yr = d.getFullYear();
+      const mo = d.getMonth();
+
+      const monthDivs = dividends.filter(div => {
+        const pd = new Date(div.payment_date);
+        return pd.getFullYear() === yr && pd.getMonth() === mo;
+      });
+
+      if (monthDivs.length === 0) continue;
+
+      const total    = monthDivs.reduce((s, d) => s + (d.received_amount || d.expected_amount), 0);
+      const received = monthDivs.filter(d => d.status === 'received').reduce((s, d) => s + (d.received_amount || d.expected_amount), 0);
+      const label    = d.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+
+      months.push({ key: `${yr}-${mo}`, label, total, received, count: monthDivs.length });
+    }
+    return months;
+  }, [dividends]);
+
   function handleEdit(d: DividendEvent) { setEditTarget(d); setShowModal(true); }
   function handleClose() { setEditTarget(undefined); setShowModal(false); }
 
@@ -180,6 +212,54 @@ export default function DividendsPage() {
             )}
           </CardBody>
         </Card>
+
+        {/* ── 6-Month Dividend History (summary only) ──────────────────── */}
+        {sixMonthHistory.length > 0 && (
+          <Card style={{ marginTop: '20px' }}>
+            <CardHeader>📊 {t('dividends.history_title')}</CardHeader>
+            <CardBody style={{ padding: '0 24px 8px' }}>
+              {sixMonthHistory.map(({ key, label, total, received, count }) => {
+                const pct = total > 0 ? Math.round((received / total) * 100) : 0;
+                return (
+                  <div key={key} style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                    padding: '14px 0', borderBottom: `1px solid ${C.gray100}`,
+                  }}>
+                    <div>
+                      <div style={{ fontSize: '13px', fontWeight: '600', color: C.gray800, textTransform: 'capitalize' }}>
+                        {label}
+                      </div>
+                      <div style={{ fontSize: '11px', color: C.gray400, marginTop: '2px' }}>
+                        {count} {count !== 1 ? t('dividends.history_events_pl') : t('dividends.history_event')}
+                      </div>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+                      {/* Progress bar */}
+                      <div style={{ width: '64px' }}>
+                        <div style={{ height: '4px', background: C.gray100, borderRadius: '2px', overflow: 'hidden' }}>
+                          <div style={{ height: '100%', width: `${pct}%`, background: pct === 100 ? C.green : C.amber, borderRadius: '2px', transition: 'width .3s' }} />
+                        </div>
+                        <div style={{ fontSize: '10px', color: C.gray400, marginTop: '3px', textAlign: 'right' }}>
+                          {pct}%
+                        </div>
+                      </div>
+                      <div style={{ textAlign: 'right', minWidth: '90px' }}>
+                        <div style={{ fontSize: '15px', fontWeight: '800', color: received > 0 ? C.green : C.gray400, fontFamily: 'var(--mono)' }}>
+                          {formatCurrency(received > 0 ? received : total)}
+                        </div>
+                        {received > 0 && received < total && (
+                          <div style={{ fontSize: '10px', color: C.gray400, marginTop: '2px' }}>
+                            {t('dividends.history_expected')}: {formatCurrency(total)}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </CardBody>
+          </Card>
+        )}
 
         {/* Quick mark received */}
         {sorted.filter(d => d.status === 'expected' || d.status === 'pending').length > 0 && (

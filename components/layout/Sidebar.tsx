@@ -150,7 +150,7 @@ export function Sidebar() {
                 <Star size={14} color="#c9a84c" fill="#c9a84c" style={{ flexShrink: 0 }} />
                 <div style={{ minWidth: 0 }}>
                   <div style={{ fontSize: '12px', fontWeight: '800', color: '#c9a84c', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{t('nav.upgrade_pro')}</div>
-                  <div style={{ fontSize: '10px', color: 'rgba(255,255,255,.35)', marginTop: '1px' }}>{effectivePlan === 'simple' ? '$19/mo' : '$9/mo'}</div>
+                  <div style={{ fontSize: '10px', color: 'rgba(255,255,255,.35)', marginTop: '1px' }}>{effectivePlan === 'simple' ? '$12/mo' : '$5/mo'}</div>
                 </div>
               </div>
             </Link>
@@ -240,7 +240,7 @@ export function Sidebar() {
                 <Star size={12} color="#c9a84c" fill="#c9a84c" />
                 <div>
                   <div style={{ fontSize: '11px', fontWeight: '700', color: '#c9a84c' }}>{t('nav.upgrade_pro')}</div>
-                  <div style={{ fontSize: '10px', color: 'rgba(255,255,255,.3)' }}>{effectivePlan === 'simple' ? '$19/mo' : '$9/mo'}</div>
+                  <div style={{ fontSize: '10px', color: 'rgba(255,255,255,.3)' }}>{effectivePlan === 'simple' ? '$12/mo' : '$5/mo'}</div>
                 </div>
               </div>
             </Link>

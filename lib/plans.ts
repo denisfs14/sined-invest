@@ -64,7 +64,7 @@ export const PLANS: PlanConfig[] = [
   {
     id: 'simple', mode: 'simple',
     name: 'Simple', badge: 'SIMPLE',
-    price: '$9/month', priceYearly: '$7/month',
+    price: '$5/month', priceYearly: '$4/month',
     color: '#1748c0',
     tagline: 'Decisões rápidas e assertivas',
     description: 'Tudo que você precisa para aportar com inteligência. Simples e eficaz.',
@@ -83,7 +83,7 @@ export const PLANS: PlanConfig[] = [
   {
     id: 'advanced', mode: 'advanced',
     name: 'Advanced', badge: 'ADVANCED',
-    price: '$19/month', priceYearly: '$15/month',
+    price: '$12/month', priceYearly: '$10/month',
     color: '#c9a84c',
     tagline: 'Controle total e análise profunda',
     description: 'Para quem quer o máximo do sistema. Analytics, exportações e visão completa.',

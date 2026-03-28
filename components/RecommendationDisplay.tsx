@@ -1,7 +1,7 @@
 'use client';
 
 import { RecommendationResult } from '@/types';
-import { formatCurrency, formatPercent } from '@/utils/format';
+import { formatCurrency, formatPercent, formatQuantity } from '@/utils/format';
 import { Badge, TickerBadge, C } from '@/components/ui';
 
 export function RecommendationDisplay({ result }: { result: RecommendationResult }) {
@@ -62,7 +62,7 @@ export function RecommendationDisplay({ result }: { result: RecommendationResult
           {/* Right */}
           <div className="rec-item-right" style={{ display: 'flex', gap: '28px', textAlign: 'right', flexShrink: 0 }}>
             <Metric label="Investir" value={formatCurrency(item.spent)} sub={`de ${formatCurrency(item.allocated_amount)}`} />
-            <Metric label="Cotas" value={item.quantity % 1 === 0 ? String(item.quantity) : item.quantity.toFixed(3)} sub={`× ${formatCurrency(item.asset.current_price)}`} highlight />
+            <Metric label="Cotas" value={formatQuantity(item.quantity, item.asset.ticker, item.asset.asset_class?.name)} sub={`× ${formatCurrency(item.asset.current_price)}`} highlight />
             <Metric label="Sobra" value={formatCurrency(item.leftover)} sub="neste ativo" dim />
           </div>
         </div>

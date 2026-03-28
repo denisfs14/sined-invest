@@ -4,7 +4,7 @@ import { useT } from '@/lib/i18n';
 import { useState, useMemo } from 'react';
 import { ShoppingCart, TrendingDown, Wallet, CheckCircle, Plus, Minus } from 'lucide-react';
 import { useApp } from '@/lib/app-context';
-import { formatCurrency, formatDateTime, formatDate } from '@/utils/format';
+import { formatCurrency, formatDateTime, formatDate, formatQuantity } from '@/utils/format';
 import {
   PageHeader, PageContent, Card, CardHeader, CardBody,
   StatCard, Button, Badge, TickerBadge,
@@ -249,7 +249,7 @@ export default function OperationsPage() {
                           <div style={{ textAlign: 'right' }}>
                             <div style={{ fontSize: '10px', color: C.gray400, textTransform: 'uppercase', letterSpacing: '.8px' }}>Sugerido</div>
                             <div style={{ fontFamily: 'var(--mono)', fontWeight: '700', fontSize: '14px' }}>
-                              {item.quantity} cotas
+                            {formatQuantity(item.quantity, asset.ticker, null)} cotas
                             </div>
                             <div style={{ fontSize: '11px', color: C.gray400 }}>
                               × {formatCurrency(asset.current_price)}

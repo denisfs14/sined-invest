@@ -66,3 +66,46 @@ export function formatRelativeTime(date: Date): string {
   if (mins < 60)  return `${mins}min atrás`;
   return `${Math.floor(mins / 60)}h atrás`;
 }
+
+// ─── Fixed income detection ───────────────────────────────────────────────────
+// Fixed income assets (Tesouro Direto, CDB, LCI, LCA, etc.) can have fractional
+// quantities. All other assets (stocks, FIIs, ETFs, BDRs) must show whole numbers.
+const FIXED_INCOME_TICKER_PATTERNS = [
+  /^TESOURO/i,
+  /^LFT/i,   // Selic
+  /^NTN/i,   // IPCA+, prefixado
+  /^LTN/i,   // Prefixado
+  /^LCI/i,
+  /^LCA/i,
+  /^CDB/i,
+  /^CRI/i,
+  /^CRA/i,
+  /^DEBENTURE/i,
+  /^LIG/i,
+];
+
+const FIXED_INCOME_CLASS_PATTERNS = [
+  /renda.?fixa/i,
+  /fixed.?income/i,
+  /tesouro/i,
+  /cr[ée]dito/i,
+  /privado/i,
+];
+
+export function isFixedIncome(ticker: string, className?: string | null): boolean {
+  if (FIXED_INCOME_TICKER_PATTERNS.some(p => p.test(ticker))) return true;
+  if (className && FIXED_INCOME_CLASS_PATTERNS.some(p => p.test(className))) return true;
+  return false;
+}
+
+// ─── Quantity formatting ──────────────────────────────────────────────────────
+// Fixed income: up to 3 decimal places. Others: integer only.
+export function formatQuantity(qty: number, ticker: string, className?: string | null): string {
+  if (isFixedIncome(ticker, className)) {
+    // Show up to 3 decimal places, stripping trailing zeros
+    const s = qty.toFixed(3);
+    return s.replace(/\.?0+$/, '') || '0';
+  }
+  // Non-fixed-income: always whole number
+  return String(Math.round(qty));
+}

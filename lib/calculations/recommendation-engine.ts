@@ -2,6 +2,7 @@ import {
   Asset, AssetClass, EnrichedAsset,
   RecommendationItem, RecommendationResult, StrategySettings
 } from '@/types';
+import { isFixedIncome } from '@/utils/format';
 
 export interface HoldingMap {
   [assetId: string]: { quantity: number; avg_price: number };
@@ -28,10 +29,24 @@ export function enrichAssets(
 }
 
 // ─── Smart quantity ───────────────────────────────────────────────────────────
-function calcQty(amount: number, price: number, roundShares: boolean): number {
-  const raw = amount / price;
-  if (roundShares && Math.floor(raw) >= 1) return Math.floor(raw);
-  return Math.round(raw * 1000) / 1000;
+// Rules:
+//   Fixed income (Tesouro Direto, LCI, CDB, etc.) → fractional OK, up to 0.001 precision
+//   All other assets (stocks, FIIs, ETFs, BDRs)   → ALWAYS integer, no exceptions
+//
+// The `roundShares` strategy setting is only relevant for fixed income.
+// Non-fixed-income assets are ALWAYS rounded to the nearest integer regardless.
+function calcQty(amount: number, price: number, asset: EnrichedAsset): number {
+  const raw   = amount / price;
+  const fixed = isFixedIncome(asset.ticker, asset.asset_class?.name ?? null);
+
+  if (fixed) {
+    // Fixed income: respect fractional quantities, round to 0.001
+    return Math.round(raw * 1000) / 1000;
+  }
+
+  // Non-fixed-income: ALWAYS integer — use Math.floor so we never over-spend
+  const floored = Math.floor(raw);
+  return floored >= 1 ? floored : 0;  // 0 if can't afford even 1 share
 }
 
 // ─── Per-class engine ─────────────────────────────────────────────────────────
@@ -42,8 +57,7 @@ function selectFromClass(
   maxPct: number,
   projectedTotal: number,
   prioritizeRed: boolean,
-  fallback: boolean,
-  roundShares: boolean
+  fallback: boolean
 ): RecommendationItem[] {
   if (classAssets.length === 0 || classAllocation <= 0) return [];
 
@@ -103,7 +117,7 @@ function selectFromClass(
   const share = classAllocation / selected.length;
 
   const items: RecommendationItem[] = selected.map(asset => {
-    const quantity = calcQty(share, asset.current_price, roundShares);
+    const quantity = calcQty(share, asset.current_price, asset);
     const spent    = quantity * asset.current_price;
     return {
       asset,
@@ -128,7 +142,7 @@ function selectFromClass(
       .sort((a, b) => a.asset.current_percentage - b.asset.current_percentage)[0];
     if (!target) break;
 
-    const extraQty   = calcQty(pool, target.asset.current_price, roundShares);
+    const extraQty   = calcQty(pool, target.asset.current_price, target.asset);
     if (extraQty <= 0) break;
 
     const extraSpent = Math.round(extraQty * target.asset.current_price * 100) / 100;
@@ -175,7 +189,7 @@ export function calculatePurchaseRecommendation(params: {
     'fallback_to_lowest' | 'round_shares'>;
 }): RecommendationResult {
   const { assets, classes, holdingsMap, totalAvailable, strategy } = params;
-  const { max_percentage, prioritize_red, fallback_to_lowest, round_shares, top_n } = strategy;
+  const { max_percentage, prioritize_red, fallback_to_lowest, top_n } = strategy;
 
   if (totalAvailable <= 0) return err('Valor de aporte deve ser maior que zero.', 0);
 
@@ -210,7 +224,7 @@ export function calculatePurchaseRecommendation(params: {
       const classItems = selectFromClass(
         classAssets, classAllocation, classTopN,
         max_percentage, projectedTotal,
-        prioritize_red, fallback_to_lowest, round_shares
+        prioritize_red, fallback_to_lowest
       );
       allItems.push(...classItems);
     }
@@ -252,7 +266,7 @@ export function calculatePurchaseRecommendation(params: {
 
     const share = totalAvailable / selected.length;
     selected.forEach(asset => {
-      const quantity = calcQty(share, asset.current_price, round_shares);
+      const quantity = calcQty(share, asset.current_price, asset);
       const spent    = quantity * asset.current_price;
       allItems.push({
         asset, allocated_amount: share, quantity, spent,
