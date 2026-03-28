@@ -1,93 +1,150 @@
 'use client';
 
-import { useEffect, useState, Suspense } from 'react';
+import { useEffect, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, Save } from 'lucide-react';
-import { adminGetUser, adminUpdateUser, UserProfile, AdminUpdatePayload } from '@/services/admin.service';
+import { adminFetchUser, adminUpdateUser } from '@/services/admin.service';
+import { getBillingStatusColor } from '@/lib/access-control';
+import type { UserProfile } from '@/lib/access-control';
+import { C } from '@/components/ui';
 
-const FL: React.CSSProperties = { fontSize: '11px', fontWeight: '700', color: '#64748B', textTransform: 'uppercase', letterSpacing: '.5px', display: 'block', marginBottom: '6px' };
-const FS: React.CSSProperties = { width: '100%', padding: '9px 12px', border: '1px solid #E2E8F0', borderRadius: '8px', fontSize: '13px', fontFamily: 'var(--font)', outline: 'none', background: 'white' };
-const FI: React.CSSProperties = { width: '100%', padding: '9px 12px', border: '1px solid #E2E8F0', borderRadius: '8px', fontSize: '13px', fontFamily: 'var(--font)', outline: 'none', boxSizing: 'border-box' };
-
-function Inner() {
-  const params  = useSearchParams();
-  const router  = useRouter();
-  const id      = params.get('id') ?? '';
-  const [user,   setUser]   = useState<UserProfile | null>(null);
-  const [form,   setForm]   = useState<AdminUpdatePayload>({});
-  const [saving, setSaving] = useState(false);
-  const [saved,  setSaved]  = useState(false);
-  const [error,  setError]  = useState('');
-
-  useEffect(() => {
-    if (!id) { router.replace('/admin/users'); return; }
-    adminGetUser(id).then(u => {
-      if (!u) { router.replace('/admin/users'); return; }
-      setUser(u);
-      setForm({ role: u.role, plan: u.plan, billing_status: u.billing_status, is_active: u.is_active, manual_plan_override: u.manual_plan_override, special_access: u.special_access, access_expires_at: u.access_expires_at, notes: u.notes ?? '' });
-    });
-  }, [id, router]);
-
-  async function save() {
-    setSaving(true); setError(''); setSaved(false);
-    try { await adminUpdateUser(id, form); setSaved(true); setTimeout(() => setSaved(false), 3000); }
-    catch (e: unknown) { setError(e instanceof Error ? e.message : 'Error'); }
-    finally { setSaving(false); }
-  }
-
-  function f<K extends keyof AdminUpdatePayload>(key: K, val: AdminUpdatePayload[K]) {
-    setForm(p => ({ ...p, [key]: val }));
-  }
-
-  if (!user) return <div style={{ padding: '32px', color: '#94A3B8' }}>Loading…</div>;
-
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div style={{ padding: '32px', maxWidth: '720px' }}>
-      <Link href="/admin/users" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', color: '#64748B', textDecoration: 'none', fontSize: '13px', marginBottom: '24px' }}>
-        <ArrowLeft size={13} /> Back to users
-      </Link>
-      <div style={{ marginBottom: '28px' }}>
-        <h1 style={{ fontSize: '20px', fontWeight: '800', color: '#0F172A', marginBottom: '4px' }}>{user.full_name || user.email}</h1>
-        <div style={{ fontSize: '13px', color: '#94A3B8' }}>{user.email} · {user.id.slice(0, 8)}…</div>
-      </div>
-
-      <div style={{ background: 'white', borderRadius: '12px', border: '1px solid #E2E8F0', padding: '20px 24px', marginBottom: '20px' }}>
-        <div style={{ fontSize: '13px', fontWeight: '700', color: '#0F172A', marginBottom: '16px' }}>Account Info</div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '16px' }}>
-          {[['Joined', new Date(user.created_at).toLocaleDateString()], ['Last login', user.last_sign_in_at ? new Date(user.last_sign_in_at).toLocaleDateString() : '—'], ['Email verified', user.email_verified ? '✓ Yes' : '✗ No']].map(([l, v]) => (
-            <div key={String(l)}><div style={{ fontSize: '11px', color: '#94A3B8', marginBottom: '3px', textTransform: 'uppercase', letterSpacing: '.5px', fontWeight: '700' }}>{l}</div><div style={{ fontWeight: '600', color: '#0F172A' }}>{v}</div></div>
-          ))}
-        </div>
-      </div>
-
-      <div style={{ background: 'white', borderRadius: '12px', border: '1px solid #E2E8F0', padding: '20px 24px', marginBottom: '20px' }}>
-        <div style={{ fontSize: '13px', fontWeight: '700', color: '#0F172A', marginBottom: '20px' }}>Access Control</div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
-          <div><label style={FL}>Role</label><select value={form.role} onChange={e => f('role', e.target.value as 'user' | 'admin')} style={FS}><option value="user">user</option><option value="admin">admin</option></select></div>
-          <div><label style={FL}>Plan</label><select value={form.plan} onChange={e => f('plan', e.target.value as UserProfile['plan'])} style={FS}><option value="free">free</option><option value="simple">simple</option><option value="advanced">advanced</option></select></div>
-          <div><label style={FL}>Billing Status</label><select value={form.billing_status} onChange={e => f('billing_status', e.target.value as UserProfile['billing_status'])} style={FS}>{['active','inactive','trial','canceled','past_due'].map(s => <option key={s} value={s}>{s}</option>)}</select></div>
-          <div><label style={FL}>Is Active</label><select value={String(form.is_active)} onChange={e => f('is_active', e.target.value === 'true')} style={FS}><option value="true">Yes</option><option value="false">No — suspended</option></select></div>
-          <div><label style={FL}>Manual Override</label><select value={String(form.manual_plan_override)} onChange={e => f('manual_plan_override', e.target.value === 'true')} style={FS}><option value="false">No (billing-controlled)</option><option value="true">Yes (admin granted)</option></select></div>
-          <div><label style={FL}>Special Access</label><select value={String(form.special_access)} onChange={e => f('special_access', e.target.value === 'true')} style={FS}><option value="false">No</option><option value="true">Yes (beta/promo)</option></select></div>
-        </div>
-        <div style={{ marginBottom: '16px' }}>
-          <label style={FL}>Access Expires At (blank = no expiry)</label>
-          <input type="datetime-local" value={form.access_expires_at?.slice(0, 16) ?? ''} onChange={e => f('access_expires_at', e.target.value ? new Date(e.target.value).toISOString() : null)} style={FI} />
-        </div>
-        <div><label style={FL}>Internal Notes</label><textarea value={form.notes ?? ''} onChange={e => f('notes', e.target.value)} rows={3} style={{ ...FI, resize: 'vertical' } as React.CSSProperties} placeholder="Admin notes…" /></div>
-      </div>
-
-      {error && <div style={{ background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: '10px', padding: '12px 16px', color: '#DC2626', fontSize: '13px', marginBottom: '16px' }}>{error}</div>}
-      {saved  && <div style={{ background: '#F0FDF4', border: '1px solid #BBF7D0', borderRadius: '10px', padding: '12px 16px', color: '#059669', fontSize: '13px', marginBottom: '16px' }}>✓ Saved</div>}
-
-      <button onClick={save} disabled={saving} style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '11px 24px', background: saving ? '#94A3B8' : '#1748c0', color: 'white', border: 'none', borderRadius: '10px', fontSize: '14px', fontWeight: '700', cursor: saving ? 'not-allowed' : 'pointer', fontFamily: 'var(--font)' }}>
-        <Save size={14} /> {saving ? 'Saving…' : 'Save Changes'}
-      </button>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+      <label style={{ fontSize: '11px', fontWeight: '700', color: 'rgba(255,255,255,.4)', textTransform: 'uppercase', letterSpacing: '1px' }}>{label}</label>
+      {children}
     </div>
   );
 }
 
-export default function AdminUserDetail() {
-  return <Suspense fallback={<div style={{ padding: '32px', color: '#94A3B8' }}>Loading…</div>}><Inner /></Suspense>;
+const IS: React.CSSProperties = {
+  padding: '10px 14px', background: 'rgba(255,255,255,.06)',
+  border: '1px solid rgba(255,255,255,.12)', borderRadius: '8px',
+  color: C.white, fontSize: '13px', fontFamily: 'var(--font)',
+  outline: 'none', width: '100%', boxSizing: 'border-box',
+};
+
+export default function AdminUserDetailPage() {
+  const params = useSearchParams();
+  const id     = params.get('id') ?? '';
+  const router = useRouter();
+
+  const [user,    setUser]    = useState<UserProfile | null>(null);
+  const [form,    setForm]    = useState<Partial<UserProfile>>({});
+  const [loading, setLoading] = useState(true);
+  const [saving,  setSaving]  = useState(false);
+  const [toast,   setToast]   = useState('');
+
+  useEffect(() => {
+    if (!id) { router.replace('/admin/users'); return; }
+    adminFetchUser(id).then(u => {
+      setUser(u);
+      if (u) setForm({
+        role:                 u.role,
+        plan:                 u.plan,
+        billing_status:       u.billing_status,
+        is_active:            u.is_active,
+        manual_plan_override: u.manual_plan_override,
+        special_access:       u.special_access,
+        access_expires_at:    u.access_expires_at ?? '',
+        notes:                u.notes ?? '',
+      });
+      setLoading(false);
+    });
+  }, [id, router]);
+
+  async function save() {
+    setSaving(true);
+    try {
+      await adminUpdateUser(id, form);
+      setToast('Salvo com sucesso ✓');
+      setTimeout(() => setToast(''), 3000);
+    } catch (e) { setToast(`Erro: ${e}`); }
+    setSaving(false);
+  }
+
+  function set<K extends keyof UserProfile>(key: K, val: UserProfile[K]) {
+    setForm(f => ({ ...f, [key]: val }));
+  }
+
+  if (loading) return <div style={{ padding: '32px', color: 'rgba(255,255,255,.4)', fontSize: '13px' }}>Carregando…</div>;
+  if (!user)   return <div style={{ padding: '32px', color: '#F87171', fontSize: '13px' }}>Usuário não encontrado</div>;
+
+  return (
+    <div style={{ padding: '32px', color: C.white, maxWidth: '680px' }}>
+      {/* Header */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '28px' }}>
+        <Link href="/admin/users" style={{ color: 'rgba(255,255,255,.3)', textDecoration: 'none', display: 'flex' }}>
+          <ArrowLeft size={18} />
+        </Link>
+        <div>
+          <div style={{ fontSize: '20px', fontWeight: '800', color: C.white }}>{user.email}</div>
+          <div style={{ fontSize: '12px', color: 'rgba(255,255,255,.35)' }}>{user.full_name} · ID: {user.id.slice(0, 8)}…</div>
+        </div>
+      </div>
+
+      {toast && (
+        <div style={{ background: toast.includes('Erro') ? '#FEF2F2' : '#F0FDF4', border: `1px solid ${toast.includes('Erro') ? '#FECACA' : '#BBF7D0'}`, borderRadius: '8px', padding: '10px 14px', fontSize: '12px', color: toast.includes('Erro') ? '#DC2626' : '#047857', marginBottom: '20px', fontWeight: '600' }}>
+          {toast}
+        </div>
+      )}
+
+      {/* Read-only account info */}
+      <div style={{ background: 'rgba(255,255,255,.03)', border: '1px solid rgba(255,255,255,.07)', borderRadius: '12px', padding: '20px', marginBottom: '20px' }}>
+        <div style={{ fontSize: '11px', fontWeight: '700', color: 'rgba(255,255,255,.3)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '14px' }}>Informações da Conta</div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+          {[['Email', user.email ?? '—'], ['Nome', user.full_name ?? '—'], ['Criado', new Date(user.created_at).toLocaleString('pt-BR')], ['Atualizado', new Date(user.updated_at).toLocaleString('pt-BR')], ['Stripe Customer', user.stripe_customer_id ?? '—'], ['Stripe Sub', user.stripe_subscription_id ?? '—']].map(([l, v]) => (
+            <div key={l}>
+              <div style={{ fontSize: '10px', color: 'rgba(255,255,255,.3)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '3px' }}>{l}</div>
+              <div style={{ fontSize: '12px', color: 'rgba(255,255,255,.65)' }}>{v}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Editable fields */}
+      <div style={{ background: 'rgba(255,255,255,.03)', border: '1px solid rgba(255,255,255,.07)', borderRadius: '12px', padding: '20px', marginBottom: '20px' }}>
+        <div style={{ fontSize: '11px', fontWeight: '700', color: 'rgba(255,255,255,.3)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '18px' }}>Controle de Acesso</div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+          <Field label="Role">
+            <select value={form.role ?? 'user'} onChange={e => set('role', e.target.value as 'user'|'admin')} style={IS as React.CSSProperties}>
+              <option value="user">user</option><option value="admin">admin</option>
+            </select>
+          </Field>
+          <Field label="Plano">
+            <select value={form.plan ?? 'free'} onChange={e => set('plan', e.target.value as UserProfile['plan'])} style={IS as React.CSSProperties}>
+              <option value="free">free</option><option value="simple">simple</option><option value="advanced">advanced</option>
+            </select>
+          </Field>
+          <Field label="Billing Status">
+            <select value={form.billing_status ?? 'inactive'} onChange={e => set('billing_status', e.target.value as UserProfile['billing_status'])} style={{ ...IS, color: getBillingStatusColor(form.billing_status ?? 'inactive') } as React.CSSProperties}>
+              <option value="inactive">inactive</option><option value="active">active</option>
+              <option value="trial">trial</option><option value="canceled">canceled</option><option value="past_due">past_due</option>
+            </select>
+          </Field>
+          <Field label="Acesso expira em">
+            <input type="datetime-local" value={(form.access_expires_at ?? '').slice(0, 16)} onChange={e => set('access_expires_at', e.target.value || null)} style={IS as React.CSSProperties} />
+          </Field>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '10px', marginTop: '14px' }}>
+          {([['is_active','Conta Ativa',form.is_active],['manual_plan_override','Override Manual',form.manual_plan_override],['special_access','Acesso Especial',form.special_access]] as [keyof UserProfile, string, boolean][]).map(([key, label, val]) => (
+            <button key={key} onClick={() => set(key, !val as UserProfile[typeof key])} style={{ padding: '10px', borderRadius: '8px', border: `1px solid ${val ? 'rgba(74,222,128,.3)' : 'rgba(255,255,255,.1)'}`, background: val ? 'rgba(74,222,128,.08)' : 'rgba(255,255,255,.04)', color: val ? '#4ADE80' : 'rgba(255,255,255,.4)', fontSize: '12px', fontWeight: '700', fontFamily: 'var(--font)', cursor: 'pointer' }}>
+              {val ? '● ' : '○ '}{label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div style={{ background: 'rgba(255,255,255,.03)', border: '1px solid rgba(255,255,255,.07)', borderRadius: '12px', padding: '20px', marginBottom: '24px' }}>
+        <div style={{ fontSize: '11px', fontWeight: '700', color: 'rgba(255,255,255,.3)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '10px' }}>Notas Admin</div>
+        <textarea value={form.notes ?? ''} onChange={e => set('notes', e.target.value)} rows={3} placeholder="Notas internas…"
+          style={{ ...IS, resize: 'vertical', minHeight: '72px' } as React.CSSProperties} />
+      </div>
+
+      <button onClick={save} disabled={saving} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '12px 24px', background: '#EF4444', border: 'none', borderRadius: '10px', color: C.white, fontSize: '13px', fontWeight: '800', fontFamily: 'var(--font)', cursor: saving ? 'wait' : 'pointer' }}>
+        <Save size={14} /> {saving ? 'Salvando…' : 'Salvar Alterações'}
+      </button>
+    </div>
+  );
 }

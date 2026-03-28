@@ -1,95 +1,159 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import Link from 'next/link';
 import { Search, ChevronRight } from 'lucide-react';
-import { adminListUsers, UserProfile } from '@/services/admin.service';
+import { adminFetchUsers, adminUpdateUser } from '@/services/admin.service';
+import type { UserProfile } from '@/lib/access-control';
+import { getBillingStatusColor, getBillingStatusLabel } from '@/lib/access-control';
+import { C } from '@/components/ui';
 
-const PLAN_COLOR: Record<string, string> = { free: '#64748B', simple: '#1748c0', advanced: '#C9A84C' };
-const STATUS_COLOR: Record<string, string> = { active: '#059669', inactive: '#DC2626', trial: '#D97706', canceled: '#94A3B8', past_due: '#7C2D12' };
-
-export default function AdminUsers() {
+export default function AdminUsersPage() {
   const [users,   setUsers]   = useState<UserProfile[]>([]);
-  const [search,  setSearch]  = useState('');
+  const [query,   setQuery]   = useState('');
   const [loading, setLoading] = useState(true);
-  const [error,   setError]   = useState('');
+  const [saving,  setSaving]  = useState<string | null>(null);
+  const [toast,   setToast]   = useState('');
 
   useEffect(() => {
-    setLoading(true);
-    adminListUsers(search || undefined)
-      .then(setUsers)
-      .catch(e => setError(e.message))
-      .finally(() => setLoading(false));
-  }, [search]);
+    adminFetchUsers().then(u => { setUsers(u); setLoading(false); });
+  }, []);
+
+  const filtered = useMemo(() => {
+    const q = query.toLowerCase();
+    if (!q) return users;
+    return users.filter(u =>
+      u.email?.toLowerCase().includes(q) ||
+      u.full_name?.toLowerCase().includes(q)
+    );
+  }, [users, query]);
+
+  async function quickUpdate(id: string, updates: Partial<UserProfile>) {
+    setSaving(id);
+    try {
+      await adminUpdateUser(id, updates);
+      setUsers(prev => prev.map(u => u.id === id ? { ...u, ...updates } : u));
+      setToast('Salvo ✓');
+      setTimeout(() => setToast(''), 2000);
+    } catch (e) { setToast(`Erro: ${e}`); }
+    setSaving(null);
+  }
+
+  const TH = ({ children }: { children: React.ReactNode }) => (
+    <th style={{ padding: '10px 16px', textAlign: 'left', fontSize: '10px', fontWeight: '700', color: 'rgba(255,255,255,.3)', textTransform: 'uppercase', letterSpacing: '1px', background: 'rgba(255,255,255,.02)', whiteSpace: 'nowrap' }}>
+      {children}
+    </th>
+  );
 
   return (
-    <div style={{ padding: '32px' }}>
+    <div style={{ padding: '32px', color: C.white }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
         <div>
-          <h1 style={{ fontSize: '22px', fontWeight: '800', color: '#0F172A', marginBottom: '4px' }}>Users</h1>
-          <div style={{ fontSize: '13px', color: '#64748B' }}>{users.length} users</div>
+          <div style={{ fontSize: '22px', fontWeight: '800', color: C.white, letterSpacing: '-0.5px' }}>Usuários</div>
+          <div style={{ fontSize: '13px', color: 'rgba(255,255,255,.35)' }}>{users.length} total</div>
         </div>
-        <div style={{ position: 'relative' }}>
-          <Search size={14} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#94A3B8' }} />
-          <input
-            value={search} onChange={e => setSearch(e.target.value)}
-            placeholder="Search email or name…"
-            style={{ paddingLeft: '34px', paddingRight: '12px', height: '36px', border: '1px solid #E2E8F0', borderRadius: '8px', fontSize: '13px', outline: 'none', width: '240px', fontFamily: 'var(--font)' }}
-          />
-        </div>
+        {toast && <div style={{ fontSize: '12px', fontWeight: '700', color: '#4ADE80' }}>{toast}</div>}
       </div>
 
-      {error && <div style={{ background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: '10px', padding: '12px 16px', color: '#DC2626', fontSize: '13px', marginBottom: '20px' }}>{error}</div>}
+      {/* Search */}
+      <div style={{ position: 'relative', marginBottom: '20px', maxWidth: '400px' }}>
+        <Search size={14} color="rgba(255,255,255,.3)" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)' }} />
+        <input
+          type="text" placeholder="Buscar por email ou nome…"
+          value={query} onChange={e => setQuery(e.target.value)}
+          style={{ width: '100%', padding: '10px 12px 10px 36px', boxSizing: 'border-box', background: 'rgba(255,255,255,.06)', border: '1px solid rgba(255,255,255,.1)', borderRadius: '10px', color: C.white, fontSize: '13px', fontFamily: 'var(--font)', outline: 'none' }}
+        />
+      </div>
 
-      <div style={{ background: 'white', borderRadius: '12px', border: '1px solid #E2E8F0', overflow: 'hidden' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
-          <thead>
-            <tr style={{ borderBottom: '1px solid #F1F5F9' }}>
-              {['Name', 'Email', 'Role', 'Plan', 'Billing', 'Active', 'Joined', ''].map(h => (
-                <th key={h} style={{ padding: '12px 16px', textAlign: 'left', fontWeight: '700', color: '#64748B', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '.5px', background: '#F8FAFC' }}>{h}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {loading ? (
-              <tr><td colSpan={8} style={{ padding: '24px 16px', textAlign: 'center', color: '#94A3B8' }}>Loading…</td></tr>
-            ) : users.length === 0 ? (
-              <tr><td colSpan={8} style={{ padding: '24px 16px', textAlign: 'center', color: '#94A3B8' }}>No users found</td></tr>
-            ) : users.map(u => (
-              <tr key={u.id} style={{ borderBottom: '1px solid #F8FAFC' }}>
-                <td style={{ padding: '12px 16px', fontWeight: '600', color: '#0F172A' }}>{u.full_name || '—'}</td>
-                <td style={{ padding: '12px 16px', color: '#475569' }}>{u.email}</td>
-                <td style={{ padding: '12px 16px' }}>
-                  <span style={{ background: u.role === 'admin' ? '#EFF6FF' : '#F8FAFC', color: u.role === 'admin' ? '#1748c0' : '#64748B', padding: '2px 8px', borderRadius: '20px', fontSize: '11px', fontWeight: '700' }}>
-                    {u.role}
-                  </span>
-                </td>
-                <td style={{ padding: '12px 16px' }}>
-                  <span style={{ color: PLAN_COLOR[u.plan] ?? '#64748B', fontWeight: '700', fontSize: '11px', textTransform: 'uppercase' }}>{u.plan}</span>
-                </td>
-                <td style={{ padding: '12px 16px' }}>
-                  <span style={{ background: `${STATUS_COLOR[u.billing_status] ?? '#94A3B8'}18`, color: STATUS_COLOR[u.billing_status] ?? '#94A3B8', padding: '2px 8px', borderRadius: '20px', fontSize: '11px', fontWeight: '700' }}>
-                    {u.billing_status}
-                  </span>
-                </td>
-                <td style={{ padding: '12px 16px' }}>
-                  <span style={{ color: u.is_active ? '#059669' : '#DC2626', fontWeight: '700', fontSize: '11px' }}>
-                    {u.is_active ? '✓' : '✗'}
-                  </span>
-                </td>
-                <td style={{ padding: '12px 16px', color: '#94A3B8', fontSize: '12px' }}>
-                  {new Date(u.created_at).toLocaleDateString('en-GB')}
-                </td>
-                <td style={{ padding: '12px 16px' }}>
-                  <Link href={`/admin/users/detail?id=${u.id}`} style={{ display: 'flex', alignItems: 'center', color: '#1748c0', textDecoration: 'none' }}>
-                    Edit <ChevronRight size={13} />
-                  </Link>
-                </td>
+      {loading ? (
+        <div style={{ color: 'rgba(255,255,255,.3)', fontSize: '13px' }}>Carregando…</div>
+      ) : (
+        <div style={{ background: 'rgba(255,255,255,.03)', border: '1px solid rgba(255,255,255,.07)', borderRadius: '12px', overflow: 'auto' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '900px' }}>
+            <thead>
+              <tr>
+                <TH>Email / Nome</TH>
+                <TH>Role</TH>
+                <TH>Plano</TH>
+                <TH>Billing</TH>
+                <TH>Ativo</TH>
+                <TH>Especial</TH>
+                <TH>Desde</TH>
+                <TH>Ações</TH>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody>
+              {filtered.map((u, i) => {
+                const isSaving = saving === u.id;
+                const rowBg = i % 2 === 0 ? 'transparent' : 'rgba(255,255,255,.015)';
+                return (
+                  <tr key={u.id} style={{ background: rowBg, borderTop: '1px solid rgba(255,255,255,.04)' }}>
+                    <td style={{ padding: '12px 16px' }}>
+                      <div style={{ fontSize: '13px', color: C.white }}>{u.email}</div>
+                      {u.full_name && <div style={{ fontSize: '11px', color: 'rgba(255,255,255,.3)' }}>{u.full_name}</div>}
+                    </td>
+                    <td style={{ padding: '12px 16px' }}>
+                      <select value={u.role} disabled={isSaving}
+                        onChange={e => quickUpdate(u.id, { role: e.target.value as 'user' | 'admin' })}
+                        style={{ background: u.role === 'admin' ? 'rgba(239,68,68,.15)' : 'rgba(255,255,255,.06)', border: '1px solid rgba(255,255,255,.1)', borderRadius: '6px', color: u.role === 'admin' ? '#FCA5A5' : 'rgba(255,255,255,.6)', fontSize: '12px', fontWeight: '700', padding: '4px 8px', fontFamily: 'var(--font)', cursor: 'pointer' }}>
+                        <option value="user">user</option>
+                        <option value="admin">admin</option>
+                      </select>
+                    </td>
+                    <td style={{ padding: '12px 16px' }}>
+                      <select value={u.plan} disabled={isSaving}
+                        onChange={e => quickUpdate(u.id, { plan: e.target.value as UserProfile['plan'] })}
+                        style={{ background: 'rgba(255,255,255,.06)', border: '1px solid rgba(255,255,255,.1)', borderRadius: '6px', color: 'rgba(255,255,255,.7)', fontSize: '12px', fontWeight: '700', padding: '4px 8px', fontFamily: 'var(--font)', cursor: 'pointer', textTransform: 'uppercase' }}>
+                        <option value="free">free</option>
+                        <option value="simple">simple</option>
+                        <option value="advanced">advanced</option>
+                      </select>
+                    </td>
+                    <td style={{ padding: '12px 16px' }}>
+                      <select value={u.billing_status} disabled={isSaving}
+                        onChange={e => quickUpdate(u.id, { billing_status: e.target.value as UserProfile['billing_status'] })}
+                        style={{ background: 'rgba(255,255,255,.06)', border: '1px solid rgba(255,255,255,.1)', borderRadius: '6px', color: getBillingStatusColor(u.billing_status), fontSize: '12px', fontWeight: '700', padding: '4px 8px', fontFamily: 'var(--font)', cursor: 'pointer' }}>
+                        <option value="inactive">inactive</option>
+                        <option value="active">active</option>
+                        <option value="trial">trial</option>
+                        <option value="canceled">canceled</option>
+                        <option value="past_due">past_due</option>
+                      </select>
+                    </td>
+                    <td style={{ padding: '12px 16px' }}>
+                      <button onClick={() => quickUpdate(u.id, { is_active: !u.is_active })} disabled={isSaving}
+                        style={{ padding: '4px 10px', borderRadius: '20px', border: 'none', cursor: 'pointer', fontFamily: 'var(--font)', fontSize: '11px', fontWeight: '700', background: u.is_active ? 'rgba(74,222,128,.15)' : 'rgba(248,113,113,.15)', color: u.is_active ? '#4ADE80' : '#F87171' }}>
+                        {u.is_active ? '● Active' : '○ Inactive'}
+                      </button>
+                    </td>
+                    <td style={{ padding: '12px 16px' }}>
+                      <button onClick={() => quickUpdate(u.id, { special_access: !u.special_access })} disabled={isSaving}
+                        style={{ padding: '4px 10px', borderRadius: '20px', border: 'none', cursor: 'pointer', fontFamily: 'var(--font)', fontSize: '11px', fontWeight: '700', background: u.special_access ? 'rgba(196,181,253,.15)' : 'rgba(255,255,255,.06)', color: u.special_access ? '#C4B5FD' : 'rgba(255,255,255,.3)' }}>
+                        {u.special_access ? '★ On' : '○ Off'}
+                      </button>
+                    </td>
+                    <td style={{ padding: '12px 16px', fontSize: '11px', color: 'rgba(255,255,255,.3)', whiteSpace: 'nowrap' }}>
+                      {new Date(u.created_at).toLocaleDateString('pt-BR')}
+                    </td>
+                    <td style={{ padding: '12px 16px' }}>
+                      <Link href={`/admin/users/detail?id=${u.id}`}>
+                        <button style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '5px 10px', background: 'rgba(255,255,255,.06)', border: '1px solid rgba(255,255,255,.1)', borderRadius: '6px', color: 'rgba(255,255,255,.5)', fontSize: '11px', cursor: 'pointer', fontFamily: 'var(--font)' }}>
+                          Detalhes <ChevronRight size={11} />
+                        </button>
+                      </Link>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+          {filtered.length === 0 && (
+            <div style={{ padding: '32px', textAlign: 'center', color: 'rgba(255,255,255,.3)', fontSize: '13px' }}>
+              Nenhum usuário encontrado
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

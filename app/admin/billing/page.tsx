@@ -1,58 +1,108 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import Link from 'next/link';
-import { adminListUsers, UserProfile } from '@/services/admin.service';
+import { adminFetchUsers, adminUpdateUser } from '@/services/admin.service';
+import { getBillingStatusColor, getBillingStatusLabel } from '@/lib/access-control';
+import type { UserProfile } from '@/lib/access-control';
+import { C } from '@/components/ui';
 
-const SC: Record<string, { bg: string; text: string }> = {
-  active:   { bg: '#F0FDF4', text: '#059669' },
-  inactive: { bg: '#FEF2F2', text: '#DC2626' },
-  trial:    { bg: '#FFFBEB', text: '#D97706' },
-  canceled: { bg: '#F8FAFC', text: '#94A3B8' },
-  past_due: { bg: '#FFF7ED', text: '#C2410C' },
-};
-
-export default function AdminBilling() {
-  const [users, setUsers] = useState<UserProfile[]>([]);
+export default function AdminBillingPage() {
+  const [users,   setUsers]   = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);
+  const [saving,  setSaving]  = useState<string | null>(null);
+  const [toast,   setToast]   = useState('');
 
-  useEffect(() => { adminListUsers().then(setUsers).finally(() => setLoading(false)); }, []);
+  useEffect(() => { adminFetchUsers().then(u => { setUsers(u); setLoading(false); }); }, []);
+
+  async function setBilling(id: string, billing_status: UserProfile['billing_status'], plan?: UserProfile['plan']) {
+    setSaving(id);
+    const updates: Partial<UserProfile> = { billing_status, manual_plan_override: true };
+    if (plan) updates.plan = plan;
+    if (billing_status === 'active' || billing_status === 'trial') updates.is_active = true;
+    try {
+      await adminUpdateUser(id, updates);
+      setUsers(prev => prev.map(u => u.id === id ? { ...u, ...updates } : u));
+      setToast('Salvo ✓'); setTimeout(() => setToast(''), 2000);
+    } catch (e) { setToast(String(e)); }
+    setSaving(null);
+  }
+
+  // Group by billing status
+  const byStatus = {
+    active:   users.filter(u => u.billing_status === 'active'),
+    trial:    users.filter(u => u.billing_status === 'trial'),
+    past_due: users.filter(u => u.billing_status === 'past_due'),
+    inactive: users.filter(u => u.billing_status === 'inactive'),
+    canceled: users.filter(u => u.billing_status === 'canceled'),
+  };
 
   return (
-    <div style={{ padding: '32px' }}>
-      <h1 style={{ fontSize: '22px', fontWeight: '800', color: '#0F172A', marginBottom: '4px' }}>Billing</h1>
-      <div style={{ fontSize: '13px', color: '#64748B', marginBottom: '24px' }}>Manual billing status management</div>
-
-      <div style={{ background: '#FFFBEB', border: '1px solid #FDE68A', borderRadius: '10px', padding: '14px 18px', marginBottom: '24px', fontSize: '13px', color: '#92400E' }}>
-        <strong>Manual mode:</strong> Stripe not yet integrated. Update billing status per user via the Users page.
+    <div style={{ padding: '32px', color: C.white }}>
+      <div style={{ marginBottom: '24px' }}>
+        <div style={{ fontSize: '22px', fontWeight: '800', color: C.white, letterSpacing: '-0.5px' }}>Billing Control</div>
+        <div style={{ fontSize: '13px', color: 'rgba(255,255,255,.35)' }}>Controle manual de acesso e cobrança</div>
+        <div style={{ marginTop: '8px', padding: '10px 16px', background: 'rgba(201,168,76,.08)', border: '1px solid rgba(201,168,76,.2)', borderRadius: '8px', fontSize: '12px', color: C.goldL }}>
+          ⚡ Manual billing mode — Stripe integration pending. Use this panel to grant access manually.
+        </div>
       </div>
 
-      {loading ? <div style={{ color: '#94A3B8' }}>Loading…</div> :
-        ['active', 'trial', 'past_due', 'inactive', 'canceled'].map(status => {
-          const group = users.filter(u => u.billing_status === status);
-          if (!group.length) return null;
-          const sc = SC[status] ?? { bg: '#F8FAFC', text: '#64748B' };
-          return (
-            <div key={status} style={{ marginBottom: '20px' }}>
-              <div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginBottom: '8px' }}>
-                <span style={{ background: sc.bg, color: sc.text, padding: '3px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase' }}>{status}</span>
-                <span style={{ fontSize: '12px', color: '#94A3B8' }}>{group.length}</span>
+      {toast && <div style={{ marginBottom: '16px', fontSize: '12px', fontWeight: '700', color: '#4ADE80' }}>{toast}</div>}
+
+      {loading ? (
+        <div style={{ color: 'rgba(255,255,255,.3)', fontSize: '13px' }}>Carregando…</div>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+          {(Object.entries(byStatus) as [UserProfile['billing_status'], UserProfile[]][]).map(([status, list]) => (
+            <div key={status}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
+                <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: getBillingStatusColor(status) }} />
+                <span style={{ fontSize: '13px', fontWeight: '700', color: getBillingStatusColor(status) }}>
+                  {getBillingStatusLabel(status)}
+                </span>
+                <span style={{ fontSize: '12px', color: 'rgba(255,255,255,.3)' }}>({list.length})</span>
               </div>
-              <div style={{ background: 'white', borderRadius: '10px', border: '1px solid #E2E8F0', overflow: 'hidden' }}>
-                {group.map((u, i) => (
-                  <div key={u.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '11px 16px', borderBottom: i < group.length - 1 ? '1px solid #F8FAFC' : 'none' }}>
-                    <div>
-                      <div style={{ fontSize: '13px', fontWeight: '600', color: '#0F172A' }}>{u.full_name || u.email}</div>
-                      <div style={{ fontSize: '11px', color: '#94A3B8' }}>{u.email} · {u.plan}</div>
+              {list.length > 0 ? (
+                <div style={{ background: 'rgba(255,255,255,.03)', border: '1px solid rgba(255,255,255,.06)', borderRadius: '10px', overflow: 'hidden' }}>
+                  {list.map((u, i) => (
+                    <div key={u.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 18px', borderTop: i > 0 ? '1px solid rgba(255,255,255,.04)' : 'none', gap: '12px', flexWrap: 'wrap' }}>
+                      <div>
+                        <div style={{ fontSize: '13px', color: C.white }}>{u.email}</div>
+                        <div style={{ fontSize: '11px', color: 'rgba(255,255,255,.3)' }}>
+                          Plano: <strong style={{ color: 'rgba(255,255,255,.6)' }}>{u.plan}</strong>
+                          {u.manual_plan_override && <span style={{ marginLeft: '8px', fontSize: '10px', color: C.goldL }}>★ override</span>}
+                          {u.special_access && <span style={{ marginLeft: '8px', fontSize: '10px', color: '#C4B5FD' }}>★ special</span>}
+                        </div>
+                      </div>
+                      <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                        {status !== 'active' && (
+                          <button onClick={() => setBilling(u.id, 'active', 'simple')} disabled={saving === u.id}
+                            style={{ padding: '5px 10px', background: 'rgba(74,222,128,.12)', border: '1px solid rgba(74,222,128,.3)', borderRadius: '6px', color: '#4ADE80', fontSize: '11px', fontWeight: '700', cursor: 'pointer', fontFamily: 'var(--font)' }}>
+                            ✓ Ativar Simple
+                          </button>
+                        )}
+                        {status !== 'trial' && (
+                          <button onClick={() => setBilling(u.id, 'trial', 'simple')} disabled={saving === u.id}
+                            style={{ padding: '5px 10px', background: 'rgba(147,197,253,.1)', border: '1px solid rgba(147,197,253,.3)', borderRadius: '6px', color: '#93C5FD', fontSize: '11px', fontWeight: '700', cursor: 'pointer', fontFamily: 'var(--font)' }}>
+                            Trial
+                          </button>
+                        )}
+                        {status !== 'inactive' && (
+                          <button onClick={() => setBilling(u.id, 'inactive')} disabled={saving === u.id}
+                            style={{ padding: '5px 10px', background: 'rgba(248,113,113,.08)', border: '1px solid rgba(248,113,113,.2)', borderRadius: '6px', color: '#F87171', fontSize: '11px', fontWeight: '700', cursor: 'pointer', fontFamily: 'var(--font)' }}>
+                            Desativar
+                          </button>
+                        )}
+                      </div>
                     </div>
-                    <Link href={`/admin/users/detail?id=${u.id}`} style={{ fontSize: '12px', color: '#1748c0', textDecoration: 'none', fontWeight: '600' }}>Edit →</Link>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              ) : (
+                <div style={{ padding: '12px 18px', color: 'rgba(255,255,255,.2)', fontSize: '12px' }}>Nenhum</div>
+              )}
             </div>
-          );
-        })
-      }
+          ))}
+        </div>
+      )}
     </div>
   );
 }

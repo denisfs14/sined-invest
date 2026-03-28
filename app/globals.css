@@ -280,3 +280,29 @@ body {
 
 /* Blurred teaser — proper height to avoid collapsed empty space */
 .advanced-lock-teaser { min-height: 140px; }
+
+/* ── Animation keyframes (moved from inline JSX to avoid re-injection flicker) */
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+@keyframes urgencyPulse {
+  0%, 100% { box-shadow: 0 8px 32px rgba(0,0,0,.25); }
+  50%       { box-shadow: 0 8px 48px rgba(253,230,138,.3), 0 8px 32px rgba(0,0,0,.25); }
+}
+
+/* ── Stabilize Advanced lock teaser — prevent layout shift ────────────────── */
+.advanced-lock-outer {
+  position: relative;
+  min-height: 160px;  /* fixed height prevents collapse/jump */
+  margin-bottom: 20px;
+  margin-top: 4px;
+  contain: layout;    /* CSS containment — prevents layout recalc escaping */
+}
+.advanced-lock-blur {
+  filter: blur(5px);
+  pointer-events: none;
+  user-select: none;
+  opacity: 0.5;
+  min-height: 140px;
+}

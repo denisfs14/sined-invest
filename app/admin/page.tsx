@@ -1,56 +1,100 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Users, UserCheck, CreditCard, Star, AlertTriangle } from 'lucide-react';
-import { adminGetStats, AdminStats } from '@/services/admin.service';
+import { Users, UserCheck, UserX, CreditCard, Star, Shield } from 'lucide-react';
+import { adminFetchUsers, adminFetchStats, type AdminStats } from '@/services/admin.service';
+import type { UserProfile } from '@/lib/access-control';
+import { getBillingStatusColor, getBillingStatusLabel } from '@/lib/access-control';
 import { C } from '@/components/ui';
 
-function StatBox({ label, value, icon: Icon, color = C.navy }: { label: string; value: number; icon: React.ElementType; color?: string }) {
+function StatTile({ label, value, icon: Icon, color = C.white }: { label: string; value: number; icon: React.ElementType; color?: string }) {
   return (
-    <div style={{ background: 'white', borderRadius: '12px', padding: '20px 24px', border: '1px solid #E2E8F0' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
-        <div style={{ width: '34px', height: '34px', borderRadius: '8px', background: `${color}15`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <Icon size={16} color={color} />
-        </div>
-        <span style={{ fontSize: '12px', fontWeight: '600', color: '#64748B', textTransform: 'uppercase', letterSpacing: '.5px' }}>{label}</span>
+    <div style={{ background: 'rgba(255,255,255,.04)', border: '1px solid rgba(255,255,255,.07)', borderRadius: '12px', padding: '20px 24px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+        <div style={{ fontSize: '12px', color: 'rgba(255,255,255,.4)', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '1px' }}>{label}</div>
+        <Icon size={16} color="rgba(255,255,255,.2)" />
       </div>
-      <div style={{ fontSize: '32px', fontWeight: '800', color: '#0F172A' }}>{value}</div>
+      <div style={{ fontSize: '28px', fontWeight: '800', color, fontFamily: 'var(--mono)' }}>{value}</div>
     </div>
   );
 }
 
-export default function AdminOverview() {
-  const [stats, setStats] = useState<AdminStats | null>(null);
-  const [error, setError] = useState('');
+export default function AdminOverviewPage() {
+  const [stats,   setStats]   = useState<AdminStats | null>(null);
+  const [users,   setUsers]   = useState<UserProfile[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error,   setError]   = useState('');
 
   useEffect(() => {
-    adminGetStats().then(setStats).catch(e => setError(e.message));
+    adminFetchUsers()
+      .then(async u => {
+        setUsers(u);
+        setStats(await adminFetchStats(u));
+      })
+      .catch(e => setError(String(e)))
+      .finally(() => setLoading(false));
   }, []);
 
+  const recentUsers = users.slice(0, 8);
+
   return (
-    <div style={{ padding: '32px' }}>
+    <div style={{ padding: '32px', color: C.white }}>
       <div style={{ marginBottom: '28px' }}>
-        <h1 style={{ fontSize: '22px', fontWeight: '800', color: '#0F172A', marginBottom: '4px' }}>Admin Overview</h1>
-        <div style={{ fontSize: '13px', color: '#64748B' }}>User and billing summary</div>
+        <div style={{ fontSize: '22px', fontWeight: '800', color: C.white, letterSpacing: '-0.5px', marginBottom: '4px' }}>Admin Overview</div>
+        <div style={{ fontSize: '13px', color: 'rgba(255,255,255,.35)' }}>SINED Invest — Painel Administrativo</div>
       </div>
 
       {error && <div style={{ background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: '10px', padding: '12px 16px', color: '#DC2626', fontSize: '13px', marginBottom: '20px' }}>{error}</div>}
 
-      {!stats ? (
-        <div style={{ color: '#94A3B8', fontSize: '13px' }}>Loading…</div>
-      ) : (
+      {loading ? (
+        <div style={{ color: 'rgba(255,255,255,.3)', fontSize: '13px' }}>Carregando…</div>
+      ) : stats && (
         <>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', marginBottom: '20px' }}>
-            <StatBox label="Total Users"    value={stats.total}         icon={Users}          color={C.blue} />
-            <StatBox label="Active"         value={stats.active}        icon={UserCheck}      color="#059669" />
-            <StatBox label="Trial"          value={stats.trial}         icon={CreditCard}     color={C.amber} />
-            <StatBox label="Inactive"       value={stats.inactive}      icon={AlertTriangle}  color="#DC2626" />
+          {/* Stats grid */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '14px', marginBottom: '32px' }}>
+            <StatTile label="Total Usuários"  value={stats.total}         icon={Users}     />
+            <StatTile label="Ativos"           value={stats.active}        icon={UserCheck} color="#4ADE80" />
+            <StatTile label="Inativos"         value={stats.inactive}      icon={UserX}     color="#F87171" />
+            <StatTile label="Plano Free"       value={stats.free}          icon={Users}     color="rgba(255,255,255,.5)" />
+            <StatTile label="Plano Simple"     value={stats.simple}        icon={CreditCard}color="#93C5FD" />
+            <StatTile label="Plano Advanced"   value={stats.advanced}      icon={Star}      color={C.goldL} />
+            <StatTile label="Trial"            value={stats.trial}         icon={CreditCard}color="#93C5FD" />
+            <StatTile label="Acesso Especial"  value={stats.specialAccess} icon={Shield}    color="#C4B5FD" />
+            <StatTile label="Admins"           value={stats.admins}        icon={Shield}    color="#F87171" />
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px' }}>
-            <StatBox label="Free Plan"      value={stats.free}          icon={Users}          color="#64748B" />
-            <StatBox label="Simple Plan"    value={stats.simple}        icon={Star}           color={C.blue} />
-            <StatBox label="Advanced Plan"  value={stats.advanced}      icon={Star}           color={C.gold} />
-            <StatBox label="Special Access" value={stats.specialAccess} icon={UserCheck}      color="#7C3AED" />
+
+          {/* Recent users */}
+          <div>
+            <div style={{ fontSize: '14px', fontWeight: '700', color: C.white, marginBottom: '14px' }}>Usuários recentes</div>
+            <div style={{ background: 'rgba(255,255,255,.03)', border: '1px solid rgba(255,255,255,.07)', borderRadius: '12px', overflow: 'hidden' }}>
+              {/* Header */}
+              <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr', padding: '12px 20px', borderBottom: '1px solid rgba(255,255,255,.06)', fontSize: '10px', fontWeight: '700', color: 'rgba(255,255,255,.3)', textTransform: 'uppercase', letterSpacing: '1px' }}>
+                <div>Email</div><div>Plano</div><div>Billing</div><div>Status</div>
+              </div>
+              {recentUsers.map((u, i) => (
+                <div key={u.id} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr', padding: '13px 20px', borderBottom: i < recentUsers.length - 1 ? '1px solid rgba(255,255,255,.04)' : 'none', alignItems: 'center' }}>
+                  <div>
+                    <div style={{ fontSize: '13px', color: C.white, fontWeight: '500' }}>{u.email}</div>
+                    {u.full_name && <div style={{ fontSize: '11px', color: 'rgba(255,255,255,.3)' }}>{u.full_name}</div>}
+                  </div>
+                  <div>
+                    <span style={{ fontSize: '11px', fontWeight: '700', padding: '2px 8px', borderRadius: '20px', background: u.plan === 'advanced' ? `${C.gold}22` : u.plan === 'simple' ? '#1748c022' : 'rgba(255,255,255,.06)', color: u.plan === 'advanced' ? C.goldL : u.plan === 'simple' ? '#93C5FD' : 'rgba(255,255,255,.4)', textTransform: 'uppercase', letterSpacing: '1px' }}>
+                      {u.plan}
+                    </span>
+                  </div>
+                  <div>
+                    <span style={{ fontSize: '11px', fontWeight: '600', color: getBillingStatusColor(u.billing_status) }}>
+                      {getBillingStatusLabel(u.billing_status)}
+                    </span>
+                  </div>
+                  <div>
+                    <span style={{ fontSize: '11px', fontWeight: '600', color: u.is_active ? '#4ADE80' : '#F87171' }}>
+                      {u.is_active ? '● Active' : '○ Inactive'}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </>
       )}

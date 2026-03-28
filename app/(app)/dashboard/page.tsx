@@ -146,38 +146,28 @@ export default function DashboardPage() {
 
   const isEmpty = !loading && assets.length === 0;
 
-  // ── Live day ticker — only updates state when daysLeft changes ────────────
-  // Using a ref avoids triggering full re-renders every minute.
-  const nowRef = useRef(new Date());
-  const [todayStr, setTodayStr] = useState(() => new Date().toDateString());
-  useEffect(() => {
-    const checkDay = setInterval(() => {
-      const newDay = new Date().toDateString();
-      nowRef.current = new Date();
-      // Only trigger re-render when the calendar date actually changes
-      if (newDay !== todayStr) setTodayStr(newDay);
-    }, 60_000);
-    return () => clearInterval(checkDay);
-  }, [todayStr]);
-  const now = nowRef.current;
+  // ── Date used for ex-div comparisons ─────────────────────────────────────
+  // No state — each memo computes fresh Date() inline to avoid stale closures
+  // and prevent unnecessary re-renders from a time-ticker.
 
   // ── Nearest upcoming ex-dividend (within 14 days) — "buy before" trigger ──
   const nextExDiv = useMemo(() => {
+    const _now = new Date(); // fresh Date() — no state dep, no re-render trigger
     const candidates = dividends
       .filter(d => {
         if (!d.ex_date) return false;
-        const diff = Math.ceil((new Date(d.ex_date).getTime() - now.getTime()) / 86_400_000);
+        const diff = Math.ceil((new Date(d.ex_date).getTime() - _now.getTime()) / 86_400_000);
         return diff >= 0 && diff <= 14;
       })
       .sort((a, b) => new Date(a.ex_date).getTime() - new Date(b.ex_date).getTime());
     if (candidates.length === 0) return null;
     const ev       = candidates[0];
     const asset    = assets.find(a => a.id === ev.asset_id);
-    const daysLeft = Math.max(0, Math.ceil((new Date(ev.ex_date).getTime() - now.getTime()) / 86_400_000));
+    const daysLeft = Math.max(0, Math.ceil((new Date(ev.ex_date).getTime() - _now.getTime()) / 86_400_000));
     const buyDeadline = new Date(ev.ex_date);
     buyDeadline.setDate(buyDeadline.getDate() - 1);
     return { ev, asset, daysLeft, buyDeadline };
-  }, [dividends, assets, now]);
+  }, [dividends, assets]); // no 'now' dep — avoids re-render on timer tick
 
   // ── What to do decision ────────────────────────────────────────────────────
   const decision = useMemo(() => {
@@ -190,11 +180,6 @@ export default function DashboardPage() {
 
   return (
     <>
-      <style>{`
-        @keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
-        @keyframes urgencyPulse{0%,100%{box-shadow:0 8px 32px rgba(0,0,0,.25)}50%{box-shadow:0 8px 48px rgba(253,230,138,.3),0 8px 32px rgba(0,0,0,.25)}}
-      `}</style>
-
       <PageHeader
         title="Dashboard"
         subtitle={mode === 'advanced' ? t('dashboard.subtitle_advanced') : t('dashboard.subtitle_simple')}
@@ -818,9 +803,9 @@ function AdvancedModeLockTeaser({ totalValue, thisMonthDivs, classes, assets, ho
   ];
 
   return (
-    <div style={{ position: 'relative', marginBottom: '20px', marginTop: '4px', minHeight: '160px' }}>
-      {/* Blurred real data */}
-      <div style={{ filter: 'blur(5px)', pointerEvents: 'none', userSelect: 'none', opacity: 0.5, minHeight: '140px' }}>
+    <div className="advanced-lock-outer">
+      {/* Blurred real data — stable min-height prevents layout shift */}
+      <div className="advanced-lock-blur">
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '10px', marginBottom: '10px' }}>
           {items.map(({ label, val }) => (
             <div key={label} style={{ background: C.white, border: `1px solid ${C.gray200}`, borderRadius: '14px', padding: '18px' }}>

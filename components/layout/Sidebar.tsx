@@ -111,7 +111,7 @@ export function Sidebar() {
             return (
               <div key={group} style={{ marginBottom: '20px' }}>
                 <div style={{ fontSize: '9px', fontWeight: '700', color: 'rgba(255,255,255,.25)', letterSpacing: '2px', textTransform: 'uppercase', padding: '0 14px', marginBottom: '6px' }}>
-                  {group === 'Config' ? 'Config' : 'Analysis'}
+                  {group === 'Config' ? t('nav.config') : t('nav.analysis')}
                 </div>
                 {items.map(item => <NavItem key={item.href} href={item.href} label={item.label} Icon={item.icon} />)}
               </div>
@@ -203,7 +203,7 @@ export function Sidebar() {
             return (
               <div key={group} style={{ marginBottom: '20px' }}>
                 <div style={{ fontSize: '10px', fontWeight: '700', color: 'rgba(255,255,255,.3)', letterSpacing: '2px', textTransform: 'uppercase', padding: '0 14px', marginBottom: '8px' }}>
-                  {group === 'Config' ? 'Config' : 'Analysis'}
+                  {group === 'Config' ? t('nav.config') : t('nav.analysis')}
                 </div>
                 {items.map(item => (
                   <NavItem key={item.href} href={item.href} label={item.label} Icon={item.icon}
