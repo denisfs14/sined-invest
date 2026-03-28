@@ -1,10 +1,6 @@
 // ─── Supabase admin client (service role) ────────────────────────────────────
 // ONLY use in API routes and server-side code.
 // The service-role key bypasses RLS — never expose to the browser.
-//
-// IMPORTANT: Never use a Proxy wrapper around the Supabase client.
-// Supabase methods rely on `this` binding internally; a Proxy breaks them.
-// Always call getAdmin() and chain methods directly on the returned client.
 
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
@@ -22,7 +18,6 @@ export function getAdmin(): SupabaseClient {
   return _admin;
 }
 
-// ─── Typed update payload ─────────────────────────────────────────────────────
 export interface ProfileBillingUpdate {
   plan?:                   'free' | 'simple' | 'advanced';
   billing_status?:         'active' | 'inactive' | 'trial' | 'canceled' | 'past_due';
@@ -33,41 +28,49 @@ export interface ProfileBillingUpdate {
 }
 
 // ─── updateProfileBilling (by user id) ───────────────────────────────────────
-// Primary update path. Checks count to detect silent "0 rows updated" failures.
+// Returns { updated: true } when no DB error occurred.
+// NOTE: we do NOT rely on `count` because Supabase JS v2 returns count=null
+// unless the PostgREST server is specifically configured to return count headers.
+// Instead: no error = success. A separate SELECT verifies the row exists.
 export async function updateProfileBilling(
   userId: string,
   updates: ProfileBillingUpdate,
 ): Promise<{ updated: boolean }> {
-  console.log(`[supabase-admin] updateProfileBilling id=${userId}`, JSON.stringify(updates));
+  console.log(`[db] updateProfileBilling id=${userId}`, JSON.stringify(updates));
 
-  const { error, count } = await getAdmin()
+  // Verify the row actually exists before updating
+  const { data: existing } = await getAdmin()
     .from('user_profiles')
-    .update(updates, { count: 'exact' })
-    .eq('id', userId);
+    .select('id')
+    .eq('id', userId)
+    .maybeSingle();
 
-  if (error) {
-    console.error(`[supabase-admin] updateProfileBilling DB error for id=${userId}:`, error.message);
-    throw new Error(`DB update failed for user ${userId}: ${error.message}`);
-  }
-
-  if (count === 0) {
-    console.error(`[supabase-admin] USER NOT FOUND — updateProfileBilling matched 0 rows for id=${userId}`);
+  if (!existing) {
+    console.error(`[db] USER NOT FOUND — no user_profiles row for id=${userId}`);
     return { updated: false };
   }
 
-  console.log(`[supabase-admin] ✓ updated ${count} row(s) for id=${userId}`);
+  const { error } = await getAdmin()
+    .from('user_profiles')
+    .update(updates)
+    .eq('id', userId);
+
+  if (error) {
+    console.error(`[db] updateProfileBilling FAILED for id=${userId}:`, error.message, error.details);
+    throw new Error(`DB update failed for user ${userId}: ${error.message}`);
+  }
+
+  console.log(`[db] ✓ updateProfileBilling success for id=${userId} plan=${updates.plan} status=${updates.billing_status}`);
   return { updated: true };
 }
 
 // ─── updateProfileBillingByEmail (email fallback) ────────────────────────────
-// Used when user_id is not available in webhook metadata (safety net).
 export async function updateProfileBillingByEmail(
   email: string,
   updates: ProfileBillingUpdate,
 ): Promise<{ updated: boolean; userId: string | null }> {
-  console.log(`[supabase-admin] updateProfileBillingByEmail email=${email}`, JSON.stringify(updates));
+  console.log(`[db] updateProfileBillingByEmail email=${email}`, JSON.stringify(updates));
 
-  // First find the user id so we can log it
   const { data: profile } = await getAdmin()
     .from('user_profiles')
     .select('id')
@@ -75,26 +78,21 @@ export async function updateProfileBillingByEmail(
     .maybeSingle();
 
   if (!profile) {
-    console.error(`[supabase-admin] USER NOT FOUND by email=${email}`);
+    console.error(`[db] USER NOT FOUND by email=${email}`);
     return { updated: false, userId: null };
   }
 
-  const { error, count } = await getAdmin()
+  const { error } = await getAdmin()
     .from('user_profiles')
-    .update(updates, { count: 'exact' })
+    .update(updates)
     .eq('email', email);
 
   if (error) {
-    console.error(`[supabase-admin] updateProfileBillingByEmail DB error for email=${email}:`, error.message);
+    console.error(`[db] updateProfileBillingByEmail FAILED for email=${email}:`, error.message);
     throw new Error(`DB update by email failed: ${error.message}`);
   }
 
-  if (count === 0) {
-    console.error(`[supabase-admin] USER NOT FOUND — updateProfileBillingByEmail matched 0 rows for email=${email}`);
-    return { updated: false, userId: null };
-  }
-
-  console.log(`[supabase-admin] ✓ updated by email=${email} id=${profile.id} rows=${count}`);
+  console.log(`[db] ✓ updateProfileBillingByEmail success email=${email} id=${profile.id} plan=${updates.plan}`);
   return { updated: true, userId: profile.id };
 }
 
@@ -107,7 +105,7 @@ export async function getProfileById(
     .select('id, plan, billing_status, stripe_customer_id, manual_plan_override, special_access, role')
     .eq('id', userId)
     .maybeSingle();
-  if (error) { console.error('[supabase-admin] getProfileById error:', error); return null; }
+  if (error) { console.error('[db] getProfileById error:', error.message); return null; }
   return data;
 }
 
@@ -120,7 +118,7 @@ export async function getProfileByStripeCustomer(
     .select('id, plan, email, manual_plan_override, special_access, role')
     .eq('stripe_customer_id', customerId)
     .maybeSingle();
-  if (error) { console.error('[supabase-admin] getProfileByStripeCustomer error:', error); return null; }
+  if (error) { console.error('[db] getProfileByStripeCustomer error:', error.message); return null; }
   return data;
 }
 
@@ -133,6 +131,20 @@ export async function getProfileByEmail(
     .select('id, plan, stripe_customer_id, manual_plan_override, special_access, role')
     .eq('email', email)
     .maybeSingle();
-  if (error) { console.error('[supabase-admin] getProfileByEmail error:', error); return null; }
+  if (error) { console.error('[db] getProfileByEmail error:', error.message); return null; }
   return data;
+}
+
+// ─── extractStripeId ──────────────────────────────────────────────────────────
+// Safely extract a string ID from a Stripe field that may be string | object | null.
+// session.subscription is typed as string | Stripe.Subscription | null in SDK v5+.
+// If Stripe returns an expanded object, we extract .id from it.
+export function extractStripeId(value: unknown): string | null {
+  if (!value) return null;
+  if (typeof value === 'string') return value;
+  if (typeof value === 'object' && value !== null && 'id' in value) {
+    return (value as { id: string }).id;
+  }
+  console.warn('[db] extractStripeId: unexpected value type:', typeof value);
+  return null;
 }
