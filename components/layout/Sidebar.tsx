@@ -119,46 +119,51 @@ export function Sidebar() {
           })}
         </nav>
 
-        {/* User */}
-        <div style={{ padding: '14px 10px', borderTop: '1px solid rgba(255,255,255,.07)' }}>
-          <div style={{ padding: '10px 14px', borderRadius: '10px', marginBottom: '6px' }}>
-            <div style={{ fontSize: '13px', fontWeight: '600', color: C.white, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+        {/* ── User / Mode / Upgrade / Logout ─────────────────────────────── */}
+        <div style={{ padding: '16px 12px 12px', borderTop: '1px solid rgba(255,255,255,.07)', flexShrink: 0 }}>
+
+          {/* User identity */}
+          <div style={{ padding: '6px 12px 14px' }}>
+            <div style={{ fontSize: '13px', fontWeight: '700', color: C.white, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginBottom: '2px' }}>
               {user?.email?.split('@')[0]}
             </div>
-            <div style={{ fontSize: '11px', color: 'rgba(255,255,255,.35)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            <div style={{ fontSize: '11px', color: 'rgba(255,255,255,.3)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               {user?.email}
             </div>
           </div>
-          {/* Mode Toggle — compact in sidebar to save vertical space */}
-          <div style={{ paddingTop: '8px', borderTop: '1px solid rgba(255,255,255,.06)', marginBottom: '6px' }}>
+
+          {/* Mode toggle — compact pill */}
+          <div style={{ marginBottom: '12px' }}>
             <ModeToggle compact />
           </div>
 
-          {/* Upgrade CTA for free users */}
+          {/* Upgrade CTA — only for free plan */}
           {getUserPlan() === 'free' && (
-            <Link href="/upgrade" style={{ textDecoration: 'none', display: 'block', margin: '0 0 6px' }}>
+            <Link href="/upgrade" style={{ textDecoration: 'none', display: 'block', marginBottom: '8px' }}>
               <div style={{
-                padding: '8px 14px', borderRadius: '8px',
-                background: `linear-gradient(135deg, rgba(201,168,76,.15), rgba(201,168,76,.08))`,
-                border: '1px solid rgba(201,168,76,.25)',
-                display: 'flex', alignItems: 'center', gap: '8px',
+                padding: '10px 14px', borderRadius: '10px',
+                background: 'linear-gradient(135deg, rgba(201,168,76,.18), rgba(201,168,76,.08))',
+                border: '1px solid rgba(201,168,76,.3)',
+                display: 'flex', alignItems: 'center', gap: '10px',
               }}>
-                <Star size={12} color="#c9a84c" fill="#c9a84c" />
-                <div>
-                  <div style={{ fontSize: '11px', fontWeight: '700', color: '#c9a84c' }}>{t('nav.upgrade_pro')}</div>
-                  <div style={{ fontSize: '10px', color: 'rgba(255,255,255,.3)' }}>R$ 29/mês</div>
+                <Star size={14} color="#c9a84c" fill="#c9a84c" style={{ flexShrink: 0 }} />
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ fontSize: '12px', fontWeight: '800', color: '#c9a84c', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{t('nav.upgrade_pro')}</div>
+                  <div style={{ fontSize: '10px', color: 'rgba(255,255,255,.35)', marginTop: '1px' }}>R$ 29/mês</div>
                 </div>
               </div>
             </Link>
           )}
+
+          {/* Logout */}
           <button onClick={handleLogout} style={{
             width: '100%', display: 'flex', alignItems: 'center', gap: '8px',
-            padding: '9px 14px', borderRadius: '8px', cursor: 'pointer',
-            background: 'transparent', border: 'none', color: 'rgba(255,255,255,.4)',
+            padding: '9px 12px', borderRadius: '8px', cursor: 'pointer',
+            background: 'transparent', border: 'none', color: 'rgba(255,255,255,.38)',
             fontSize: '12px', fontFamily: 'var(--font)', transition: 'all .15s',
           }}
-            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,.06)'; (e.currentTarget as HTMLElement).style.color = C.white; }}
-            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,.4)'; }}
+            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,.07)'; (e.currentTarget as HTMLElement).style.color = C.white; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,.38)'; }}
           >
             <LogOut size={14} /> {t('nav.logout')}
           </button>

@@ -68,9 +68,10 @@ export function getUserPlanData(rawPlan?: string): UserPlan {
 
 function normalizeplan(raw?: string): Plan {
   if (!raw) return 'FREE';
-  const up = raw.toUpperCase();
-  if (up === 'SIMPLE')   return 'SIMPLE';
-  if (up === 'ADVANCED') return 'ADVANCED';
+  const up = raw.trim().toUpperCase();
+  // Support both user_profiles lowercase ('advanced') and legacy uppercase ('ADVANCED')
+  if (up === 'SIMPLE'   || up === 'SIMPLE_MODE')   return 'SIMPLE';
+  if (up === 'ADVANCED' || up === 'ADVANCED_MODE')  return 'ADVANCED';
   return 'FREE';
 }
 

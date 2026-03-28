@@ -70,7 +70,7 @@ export default function OperationsPage() {
   async function confirmBuy() {
     const qty   = parseFloat(buyQty);
     const price = parseFloat(buyPrice);
-    if (!buyAsset || !qty || !price) return notify('Preencha todos os campos', 'error');
+    if (!buyAsset || !qty || !price) return notify(t('operations.fill_all_fields'), 'error');
     setBuyLoading(true);
     try {
       await executeBuy(buyAsset, qty, price);
@@ -78,7 +78,7 @@ export default function OperationsPage() {
       setBuyAsset(''); setBuyQty(''); setBuyPrice('');
       notify('✓ Compra registrada! Carteira atualizada.');
     } catch (e: unknown) {
-      notify(`Erro: ${e instanceof Error ? e.message : 'desconhecido'}`, 'error');
+      notify(t('operations.error_prefix', { msg: e instanceof Error ? e.message : '?' }), 'error');
     } finally {
       setBuyLoading(false);
     }
@@ -87,18 +87,18 @@ export default function OperationsPage() {
   async function confirmSell() {
     const qty   = parseFloat(sellQty);
     const price = parseFloat(sellPrice);
-    if (!sellAsset || !qty || !price) return notify('Preencha todos os campos', 'error');
+    if (!sellAsset || !qty || !price) return notify(t('operations.fill_all_fields'), 'error');
     const holding = holdingsMap[sellAsset];
-    if (!holding || qty > holding.quantity) return notify('Quantidade maior que o disponível', 'error');
+    if (!holding || qty > holding.quantity) return notify(t('operations.qty_exceeds'), 'error');
     setSellLoading(true);
     try {
       await executeSell(sellAsset, qty, price);
       setShowSellModal(false);
       setSellAsset(''); setSellQty(''); setSellPrice('');
       const total = qty * price;
-      notify(`✓ Venda de ${qty} cotas registrada. R$ ${total.toFixed(2)} adicionado ao saldo.`);
+      notify(t('operations.sell_ok', { qty: String(qty), total: total.toFixed(2) }));
     } catch (e: unknown) {
-      notify(`Erro: ${e instanceof Error ? e.message : 'desconhecido'}`, 'error');
+      notify(t('operations.error_prefix', { msg: e instanceof Error ? e.message : '?' }), 'error');
     } finally {
       setSellLoading(false);
     }
@@ -106,20 +106,20 @@ export default function OperationsPage() {
 
   async function confirmCash() {
     const amt = parseFloat(cashAmt);
-    if (!amt || amt <= 0) return notify('Valor inválido', 'error');
-    if (cashMode === 'withdraw' && amt > cashBalance) return notify('Saldo insuficiente', 'error');
+    if (!amt || amt <= 0) return notify(t('operations.invalid_amount'), 'error');
+    if (cashMode === 'withdraw' && amt > cashBalance) return notify(t('operations.insufficient_balance'), 'error');
     try {
       if (cashMode === 'withdraw') {
         await withdrawCash(amt);
         notify(`✓ Retirada de ${formatCurrency(amt)} registrada`);
       } else {
-        await depositCash(amt, cashDesc || 'Depósito manual');
+        await depositCash(amt, cashDesc || t('operations.deposit_default'));
         notify(`✓ Depósito de ${formatCurrency(amt)} registrado`);
       }
       setShowCashModal(false);
       setCashAmt(''); setCashDesc('');
     } catch (e: unknown) {
-      notify(`Erro: ${e instanceof Error ? e.message : 'desconhecido'}`, 'error');
+      notify(t('operations.error_prefix', { msg: e instanceof Error ? e.message : '?' }), 'error');
     }
   }
 
@@ -139,7 +139,7 @@ export default function OperationsPage() {
 
   const cashEventLabels: Record<string, string> = {
     sell_proceeds: '💰 Venda',
-    leftover:      '💵 Sobra de aporte',
+    leftover:      t('operations.sim_label'),
     withdrawal:    '🏦 Retirada',
     deposit:       '📥 Depósito',
   };
@@ -148,7 +148,7 @@ export default function OperationsPage() {
     <>
       <PageHeader
         title={t('operations.title')}
-        subtitle="Registre compras, vendas e gerencie seu saldo"
+        subtitle={t('operations.subtitle')}
         action={
           <div style={{ display: 'flex', gap: '10px' }}>
             <Button variant="secondary" size="sm" onClick={() => { setCashMode('deposit'); setShowCashModal(true); }}>
@@ -171,24 +171,24 @@ export default function OperationsPage() {
         {/* Stats */}
         <div className='ops-stat-grid' style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', marginBottom: '24px' }}>
           <StatCard
-            label="Saldo Disponível"
+            label={t('operations.available_balance')}
             value={formatCurrency(cashBalance)}
-            sub="Sobras + vendas não investidas"
+            sub={t('operations.cash_sub')}
             color={cashBalance > 0 ? C.green : C.gray400}
             accent={C.green}
             icon={<Wallet size={15} />}
           />
           <StatCard
-            label="Última Recomendação"
+            label={t('operations.last_simulation')}
             value={lastSim ? formatCurrency(lastSim.total_amount) : '—'}
-            sub={lastSim ? `${lastSim.items?.length ?? 0} ativos sugeridos` : 'Nenhuma simulação'}
+            sub={lastSim ? (lastSim.items?.length === 1 ? t('operations.last_sim_sub', { count: lastSim.items.length }) : t('operations.last_sim_sub_pl', { count: lastSim.items?.length ?? 0 })) : t('operations.no_simulation')}
             accent={C.blue}
             icon={<ShoppingCart size={15} />}
           />
           <StatCard
-            label="Ativos na Carteira"
+            label={t('operations.assets_label')}
             value={String(activeAssets.length)}
-            sub="Com posição ativa"
+            sub={t('operations.active_assets_sub')}
             accent={C.gold}
             icon={<CheckCircle size={15} />}
           />
@@ -214,13 +214,13 @@ export default function OperationsPage() {
             {pendingBuys.length > 0 && (
               <Card style={{ marginBottom: '20px' }}>
                 <CardHeader action={
-                  <Badge color="blue">{pendingBuys.length} ativo{pendingBuys.length !== 1 ? 's' : ''} recomendados</Badge>
+                  <Badge color="blue">{pendingBuys.length === 1 ? t('operations.pending_buys_label', { count: pendingBuys.length }) : t('operations.pending_buys_pl', { count: pendingBuys.length })}</Badge>
                 }>
                   📋 Última Recomendação — {lastSim && formatDate(lastSim.created_at)}
                 </CardHeader>
                 <CardBody style={{ padding: '0 24px 16px' }}>
                   <div style={{ fontSize: '12px', color: C.gray400, marginBottom: '12px', padding: '8px 0' }}>
-                    Clique em <strong>Registrar Compra</strong> para confirmar a execução de cada ativo
+                    {t('operations.confirm_execute')}
                   </div>
                   {pendingBuys.map((item, i) => {
                     const asset   = item.asset!;
@@ -263,7 +263,7 @@ export default function OperationsPage() {
                           </div>
                           <Button variant="primary" size="sm"
                             onClick={() => handleQuickBuy(asset.id, item.quantity, asset.current_price)}>
-                            <CheckCircle size={13} /> Registrar
+                            <CheckCircle size={13} /> {t('operations.register_btn')}
                           </Button>
                         </div>
                       </div>
@@ -300,7 +300,7 @@ export default function OperationsPage() {
               ) : (
                 <>
                   <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr 100px 120px 120px 130px', gap: '12px', padding: '10px 0', borderBottom: `1px solid ${C.gray200}`, fontSize: '10px', fontWeight: '700', color: C.gray400, letterSpacing: '1px', textTransform: 'uppercase' }}>
-                    <span>Ticker</span><span>Nome</span><span>Qtd.</span><span>PM</span><span>Preço Dia</span><span></span>
+                    <span>{t('operations.col_ticker')}</span><span>{t('operations.col_name')}</span><span>{t('operations.col_qty')}</span><span>{t('operations.col_pm')}</span><span>{t('operations.col_day_price')}</span><span></span>
                   </div>
                   {activeAssets.map(asset => {
                     const h = holdingsMap[asset.id];
@@ -404,9 +404,9 @@ export default function OperationsPage() {
 
       {/* ── BUY MODAL ── */}
       <Modal open={showBuyModal} onClose={() => setShowBuyModal(false)}
-        title="Registrar Compra" subtitle="Confirme os dados da operação" width={480}>
+        title={t('operations.register_buy_title')} subtitle={t('operations.register_buy_sub')} width={480}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-          <FormGroup label="Ativo *">
+          <FormGroup label={t('operations.form_asset')}>
             <Select value={buyAsset} onChange={e => setBuyAsset(e.target.value)}>
               <option value="">— Selecione o ativo —</option>
               {assets.filter(a => a.active).map(a => (
@@ -415,11 +415,11 @@ export default function OperationsPage() {
             </Select>
           </FormGroup>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
-            <FormGroup label="Quantidade *">
+            <FormGroup label={t('operations.form_qty')}>
               <Input type="number" min="0" step="0.001" placeholder="100"
                 value={buyQty} onChange={e => setBuyQty(e.target.value)} />
             </FormGroup>
-            <FormGroup label="Preço Unitário (R$) *">
+            <FormGroup label={t('operations.form_unit_price')}>
               <div style={{ position: 'relative' }}>
                 <Input type="number" min="0" step="0.01" placeholder="35.00"
                   value={buyPrice} onChange={e => setBuyPrice(e.target.value)}
@@ -472,9 +472,9 @@ export default function OperationsPage() {
 
       {/* ── SELL MODAL ── */}
       <Modal open={showSellModal} onClose={() => setShowSellModal(false)}
-        title="Registrar Venda" subtitle="O valor vai para o seu Saldo Disponível" width={480}>
+        title={t('operations.register_sell_title')} subtitle={t('operations.register_sell_sub')} width={480}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-          <FormGroup label="Ativo *">
+          <FormGroup label={t('operations.form_asset')}>
             <Select value={sellAsset} onChange={e => {
               setSellAsset(e.target.value);
               const a = assets.find(x => x.id === e.target.value);
@@ -496,12 +496,12 @@ export default function OperationsPage() {
           )}
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
-            <FormGroup label="Quantidade *">
+            <FormGroup label={t('operations.form_qty')}>
               <Input type="number" min="0.001" step="0.001"
                 placeholder={sellHolding ? String(sellHolding.quantity) : '0'}
                 value={sellQty} onChange={e => setSellQty(e.target.value)} />
             </FormGroup>
-            <FormGroup label="Preço Unitário (R$) *">
+            <FormGroup label={t('operations.form_unit_price')}>
               <Input type="number" min="0" step="0.01"
                 value={sellPrice} onChange={e => setSellPrice(e.target.value)} />
             </FormGroup>
@@ -557,7 +557,7 @@ export default function OperationsPage() {
 
       {/* ── CASH MODAL ── */}
       <Modal open={showCashModal} onClose={() => setShowCashModal(false)}
-        title={cashMode === 'withdraw' ? 'Registrar Retirada' : 'Registrar Depósito'}
+        title={cashMode === 'withdraw' ? t('operations.register_withdraw') : t('operations.register_deposit')}
         subtitle={cashMode === 'withdraw'
           ? `Saldo atual: ${formatCurrency(cashBalance)}`
           : 'Adicionar valor ao saldo disponível'}

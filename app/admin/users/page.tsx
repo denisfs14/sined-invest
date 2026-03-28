@@ -7,8 +7,10 @@ import { adminFetchUsers, adminUpdateUser } from '@/services/admin.service';
 import type { UserProfile } from '@/lib/access-control';
 import { getBillingStatusColor, getBillingStatusLabel } from '@/lib/access-control';
 import { C } from '@/components/ui';
+import { useT } from '@/lib/i18n';
 
 export default function AdminUsersPage() {
+  const { t } = useT();
   const [users,   setUsers]   = useState<UserProfile[]>([]);
   const [query,   setQuery]   = useState('');
   const [loading, setLoading] = useState(true);
@@ -33,7 +35,7 @@ export default function AdminUsersPage() {
     try {
       await adminUpdateUser(id, updates);
       setUsers(prev => prev.map(u => u.id === id ? { ...u, ...updates } : u));
-      setToast('Salvo ✓');
+      setToast(t('admin.saved_ok'));
       setTimeout(() => setToast(''), 2000);
     } catch (e) { setToast(`Erro: ${e}`); }
     setSaving(null);
@@ -59,27 +61,27 @@ export default function AdminUsersPage() {
       <div style={{ position: 'relative', marginBottom: '20px', maxWidth: '400px' }}>
         <Search size={14} color="rgba(255,255,255,.3)" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)' }} />
         <input
-          type="text" placeholder="Buscar por email ou nome…"
+          type="text" placeholder={t('admin.users_search')}
           value={query} onChange={e => setQuery(e.target.value)}
           style={{ width: '100%', padding: '10px 12px 10px 36px', boxSizing: 'border-box', background: 'rgba(255,255,255,.06)', border: '1px solid rgba(255,255,255,.1)', borderRadius: '10px', color: C.white, fontSize: '13px', fontFamily: 'var(--font)', outline: 'none' }}
         />
       </div>
 
       {loading ? (
-        <div style={{ color: 'rgba(255,255,255,.3)', fontSize: '13px' }}>Carregando…</div>
+        <div style={{ color: 'rgba(255,255,255,.3)', fontSize: '13px' }}>{t('admin.loading')}</div>
       ) : (
         <div style={{ background: 'rgba(255,255,255,.03)', border: '1px solid rgba(255,255,255,.07)', borderRadius: '12px', overflow: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '900px' }}>
             <thead>
               <tr>
-                <TH>Email / Nome</TH>
-                <TH>Role</TH>
-                <TH>Plano</TH>
-                <TH>Billing</TH>
-                <TH>Ativo</TH>
-                <TH>Especial</TH>
-                <TH>Desde</TH>
-                <TH>Ações</TH>
+                <TH>{t('admin.col_email')}</TH>
+                <TH>{t('admin.col_role')}</TH>
+                <TH>{t('admin.col_plan')}</TH>
+                <TH>{t('admin.col_billing')}</TH>
+                <TH>{t('admin.col_active')}</TH>
+                <TH>{t('admin.col_special')}</TH>
+                <TH>{t('admin.col_since')}</TH>
+                <TH>{t('admin.col_actions')}</TH>
               </tr>
             </thead>
             <tbody>

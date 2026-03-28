@@ -53,7 +53,7 @@ export default function SettingsPage() {
       setShowPwModal(false);
       setCurrentPw(''); setNewPw(''); setConfirmPw('');
     } catch (e: unknown) {
-      setPwError(e instanceof Error ? e.message : 'Erro ao alterar senha');
+      setPwError(e instanceof Error ? e.message : t('settings.pw_error'));
     } finally { setLoading(false); }
   }
 
@@ -66,7 +66,7 @@ export default function SettingsPage() {
     setLoading(true);
     try {
       await resetPortfolio();
-      notify('Portfólio resetado com sucesso');
+      notify(t('settings.reset_ok'), 'success');
       setShowReset(false);
       setResetWord('');
     } catch { notify('Erro ao resetar', 'error'); }

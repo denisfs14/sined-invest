@@ -1,4 +1,5 @@
 'use client';
+import { useT } from '@/lib/i18n';
 
 import { useEffect, useState } from 'react';
 import { Asset, DividendEvent } from '@/types';
@@ -19,7 +20,9 @@ const blank = {
   expected_amount: '', received_amount: '', status: 'expected' as DividendEvent['status'],
 };
 
-export function DividendModal({ open, onClose, onSave, onUpdate, assets, portfolioId, edit }: Props) {
+export function DividendModal({
+  open, onClose, onSave, onUpdate, assets, portfolioId, edit }: Props) {
+  const { t } = useT();
   const [f, setF] = useState({ ...blank });
 
   useEffect(() => {
@@ -66,11 +69,11 @@ export function DividendModal({ open, onClose, onSave, onUpdate, assets, portfol
 
   return (
     <Modal open={open} onClose={onClose}
-      title={edit ? 'Editar Provento' : 'Registrar Provento'}
+      title={edit ? t('modals.edit_dividend') : t('modals.add_dividend')}
       subtitle="Dividendos, JCP, rendimentos de FIIs" width={500}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
 
-        <FormGroup label="Ativo *">
+        <FormGroup label={t('modals.form_asset')}>
           <Select value={f.asset_id} onChange={e => set('asset_id', e.target.value)}>
             <option value="">— Selecione o ativo —</option>
             {assets.map(a => <option key={a.id} value={a.id}>{a.ticker} · {a.name}</option>)}
@@ -78,26 +81,26 @@ export function DividendModal({ open, onClose, onSave, onUpdate, assets, portfol
         </FormGroup>
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
-          <FormGroup label="Data Ex">
+          <FormGroup label={t('modals.form_ex_date')}>
             <Input type="date" value={f.ex_date} onChange={e => set('ex_date', e.target.value)} />
           </FormGroup>
-          <FormGroup label="Data Pagamento *">
+          <FormGroup label={t('modals.form_pay_date')}>
             <Input type="date" value={f.payment_date} onChange={e => set('payment_date', e.target.value)} />
           </FormGroup>
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
-          <FormGroup label="Valor Esperado (R$)">
+          <FormGroup label={t('modals.form_expected')}>
             <Input type="number" min="0" step="0.01" placeholder="0.00"
               value={f.expected_amount} onChange={e => set('expected_amount', e.target.value)} />
           </FormGroup>
-          <FormGroup label="Valor Recebido (R$)">
+          <FormGroup label={t('modals.form_received')}>
             <Input type="number" min="0" step="0.01" placeholder="0.00"
               value={f.received_amount} onChange={e => set('received_amount', e.target.value)} />
           </FormGroup>
         </div>
 
-        <FormGroup label="Status">
+        <FormGroup label={t('modals.form_status')}>
           <Select value={f.status} onChange={e => set('status', e.target.value)}>
             <option value="expected">Esperado</option>
             <option value="pending">Pendente</option>

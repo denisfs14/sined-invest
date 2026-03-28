@@ -48,28 +48,28 @@ export default function DividendsPage() {
     <>
       <PageHeader
         title={t('dividends.title')}
-        subtitle="Calendário de dividendos e janela de aporte"
+        subtitle={t('dividends.subtitle')}
         action={
           <div style={{ display: 'flex', gap: '10px' }}>
             <Button variant="secondary" size="sm" loading={syncing} onClick={async () => {
               setSyncing(true);
-              notify('Buscando proventos via Yahoo Finance...');
+              notify(t('dividends.syncing_yahoo'));
               try {
                 const res = await syncDividendsNow();
                 if (res.synced > 0) {
-                  notify(`✓ ${res.synced} proventos importados automaticamente`);
+                  notify(t('dividends.synced_ok', { count: res.synced }));
                 } else if (res.errors.length > 0) {
-                  notify(`⚠️ Erros em ${res.errors.length} ativo(s). Verifique o console.`);
+                  notify(t('dividends.sync_errors', { count: res.errors.length }));
                 } else {
-                  notify('Nenhum provento novo encontrado');
+                  notify(t('dividends.none_found'));
                 }
-              } catch { notify('Erro ao buscar proventos'); }
+              } catch { notify(t('dividends.sync_error')); }
               setSyncing(false);
             }}>
               🔄 {syncing ? t('dividends.syncing_btn') : t('dividends.sync_btn')}
             </Button>
             <Button variant="primary" size="sm" onClick={() => { setEditTarget(undefined); setShowModal(true); }}>
-              <Plus size={13} /> Registrar
+              <Plus size={13} /> {t('dividends.add_btn_short')}
             </Button>
           </div>
         }
@@ -96,9 +96,9 @@ export default function DividendsPage() {
             {sorted.length === 0 ? (
               <EmptyState
                 icon="📅"
-                title="Nenhum provento registrado"
-                description="Registre dividendos, JCP e rendimentos de FIIs para ativar a janela inteligente de aporte"
-                action={<Button variant="primary" size="sm" onClick={() => setShowModal(true)}>+ Registrar</Button>}
+                title={t('dividends.empty_title')}
+                description={t('dividends.empty_desc')}
+                action={<Button variant="primary" size="sm" onClick={() => setShowModal(true)}>{`+ ${t('dividends.add_btn_short')}`}</Button>}
               />
             ) : (
               <div>
@@ -112,12 +112,12 @@ export default function DividendsPage() {
                   fontSize: '10px', fontWeight: '700', color: C.gray400,
                   letterSpacing: '1px', textTransform: 'uppercase',
                 }}>
-                  <span>Ativo</span>
-                  <span>Data Ex</span>
+                  <span>{t('dividends.col_asset')}</span>
+                  <span>{t('dividends.col_ex_date')}</span>
                   <span>Pagamento</span>
                   <span>Esperado</span>
                   <span>Recebido</span>
-                  <span>Status</span>
+                  <span>{t('dividends.col_status')}</span>
                   <span></span>
                 </div>
 
@@ -168,7 +168,7 @@ export default function DividendsPage() {
                           <Pencil size={12} />
                         </button>
                         <button onClick={() => {
-                          if (confirm('Remover este provento?')) { deleteDividend(ev.id); notify('Provento removido'); }
+                          if (confirm(t('dividends.remove_confirm'))) { deleteDividend(ev.id); notify(t('dividends.removed_ok')); }
                         }} style={{ background: '#FEF2F2', border: 'none', borderRadius: '6px', padding: '5px 8px', cursor: 'pointer', color: C.red }}>
                           <Trash2 size={12} />
                         </button>

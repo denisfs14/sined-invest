@@ -9,6 +9,8 @@ import * as db from '@/services/supabase.service';
 import { syncRedFlags, fetchOperations, fetchCashBalance, fetchCashEvents } from '@/services/supabase.service';
 import { syncPrices, syncDividends, reconcileDividendStatuses } from '@/services/price-sync.service';
 import { getUserPlanData } from '@/lib/plan-access';
+import { getEffectivePlan, isAdmin as checkIsAdmin } from '@/lib/access-control';
+import { fetchMyProfile } from '@/services/admin.service';
 import type { Plan, Mode, UserPlan } from '@/types/plan';
 
 interface AppState {
@@ -100,7 +102,23 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       // Reload assets after sync
       const syncedAssets = await db.fetchAssets(portfolio.id);
 
-      const planData = getUserPlanData(u.user_metadata?.plan);
+      // ─── SOURCE OF TRUTH: user_profiles, not auth metadata ─────────────
+      // Admin panel changes to plan/role take effect here on next login/refresh.
+      let planData = getUserPlanData(); // safe fallback (free)
+      try {
+        const profile = await fetchMyProfile();
+        if (profile) {
+          const effectivePlan = getEffectivePlan(profile); // respects admin/special_access/override
+          planData = getUserPlanData(effectivePlan);
+          // Admin always gets full advanced access
+          if (checkIsAdmin(profile)) {
+            planData = { plan: 'ADVANCED', mode: 'advanced', isDemo: false, canSimple: true, canAdv: true };
+          }
+        }
+      } catch {
+        // Fallback to metadata if profile fetch fails (e.g. first-time user before trigger)
+        planData = getUserPlanData(u.user_metadata?.plan);
+      }
       setState({
         user: u, portfolio,
         assets: syncedAssets, classes, holdingsMap,

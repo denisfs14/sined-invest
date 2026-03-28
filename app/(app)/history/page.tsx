@@ -28,7 +28,7 @@ export default function HistoryPage() {
     if (!confirm('Limpar todo o histórico?')) return;
     clearHistory();
     setExpanded(null);
-    notify('Histórico limpo');
+    notify(t('history.cleared_ok'));
   }
 
   return (
@@ -44,7 +44,7 @@ export default function HistoryPage() {
       />
       <PageContent>
         <UpgradeBanner message="Simple Mode — Histórico de 6 meses" targetPlan="simple" feature="history:6months" />
-        <FeatureTeaser feature="history:6months" title="Histórico ilimitado no plano Pro" description="No plano gratuito você vê os últimos 30 dias. Faça upgrade para ver todo o histórico de simulações." />
+        <FeatureTeaser feature="history:6months" title={t('history.pro_title')} description={t('history.pro_desc')} />
         {history.length === 0 ? (
           <Card>
             <EmptyState

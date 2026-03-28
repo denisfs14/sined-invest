@@ -230,15 +230,15 @@ export default function DashboardPage() {
                     </span>
                   </div>
                   <div style={{ fontSize: '17px', fontWeight: '800', color: '#FFFFFF', letterSpacing: '-0.3px' }}>
-                    Comprar {nextExDiv.asset?.ticker ?? 'ativo'} antes de {nextExDiv.buyDeadline.toLocaleDateString('pt-BR', { day: 'numeric', month: 'long' })}
+                    {t('dashboard.buy_ticker_before', { ticker: nextExDiv.asset?.ticker ?? '—', date: nextExDiv.buyDeadline.toLocaleDateString('pt-BR', { day: 'numeric', month: 'long' }) })}
                   </div>
                   <div style={{ fontSize: '13px', color: 'rgba(255,255,255,.65)', marginTop: '3px' }}>
-                    Para receber {formatCurrency(nextExDiv.ev.expected_amount)} em dividendos · Ex-div: {formatDate(nextExDiv.ev.ex_date)}
+                    {t('dashboard.to_receive_div', { amount: formatCurrency(nextExDiv.ev.expected_amount), date: formatDate(nextExDiv.ev.ex_date) })}
                   </div>
                 </div>
               </div>
               <div style={{ background: '#FDE68A', color: '#78350F', padding: '11px 22px', borderRadius: '10px', fontSize: '13px', fontWeight: '800', whiteSpace: 'nowrap', flexShrink: 0, boxShadow: '0 2px 8px rgba(0,0,0,.2)' }}>
-                Calcular Aporte →
+                {t('dashboard.banner_cta_btn')}
               </div>
             </div>
           </Link>
@@ -291,7 +291,7 @@ export default function DashboardPage() {
                 <Timer size={15} color="#92400E" style={{ flexShrink: 0 }} />
                 <div>
                   <span style={{ fontSize: '13px', fontWeight: '800', color: '#92400E' }}>
-                    Comprar {nextExDiv.asset?.ticker ?? 'ativo'} antes de {nextExDiv.buyDeadline.toLocaleDateString('pt-BR', { day: 'numeric', month: 'short' })}
+                    {t('dashboard.buy_ticker_short', { ticker: nextExDiv.asset?.ticker ?? '—', date: nextExDiv.buyDeadline.toLocaleDateString('pt-BR', { day: 'numeric', month: 'short' }) })}
                   </span>
                   <span style={{ fontSize: '12px', color: '#92400E', opacity: 0.7, marginLeft: '8px' }}>
                     para receber {formatCurrency(nextExDiv.ev.expected_amount)} · ex-div em {nextExDiv.daysLeft}d
@@ -366,28 +366,28 @@ export default function DashboardPage() {
                   )}
                   <div style={{ fontSize: '26px', fontWeight: '800', color: C.white, letterSpacing: '-0.8px', marginBottom: '6px' }}>
                     {nextExDiv && nextExDiv.daysLeft <= 7
-                      ? `Comprar ${nextExDiv.asset?.ticker ?? 'ativo'} antes de ${nextExDiv.buyDeadline.toLocaleDateString('pt-BR', { day: 'numeric', month: 'short' })}`
+                      ? t('dashboard.buy_ticker_short', { ticker: nextExDiv.asset?.ticker ?? '—', date: nextExDiv.buyDeadline.toLocaleDateString('pt-BR', { day: 'numeric', month: 'short' }) })
                       : decision.label}
                   </div>
                   <div style={{ fontSize: '14px', color: 'rgba(255,255,255,.45)', lineHeight: '1.5', marginBottom: '8px' }}>
                     {nextExDiv && nextExDiv.daysLeft <= 7
-                      ? `Para receber ${formatCurrency(nextExDiv.ev.expected_amount)} em dividendos — data ex em ${formatDate(nextExDiv.ev.ex_date)}`
+                      ? t('dashboard.to_receive_short', { amount: formatCurrency(nextExDiv.ev.expected_amount), date: formatDate(nextExDiv.ev.ex_date) })
                       : decision.desc}
                   </div>
                   {/* Expected outcome */}
                   {nextExDiv && nextExDiv.daysLeft <= 7 && (
                     <div style={{ fontSize: '12px', color: '#FDE68A', fontWeight: '700' }}>
-                      ✓ Resultado esperado: receber {formatCurrency(nextExDiv.ev.expected_amount)} em dividendos
+                      {t('dashboard.outcome_receive_fmt', { amount: formatCurrency(nextExDiv.ev.expected_amount) })}
                     </div>
                   )}
                   {!nextExDiv && decision.type === 'aportar' && lastSim?.items?.length > 0 && (
                     <div style={{ fontSize: '12px', color: C.goldL, fontWeight: '600' }}>
-                      ✓ Resultado esperado: comprar {lastSim.items.slice(0,3).map((i: {asset?: {ticker?: string}}) => i.asset?.ticker).filter(Boolean).join(', ')}{lastSim.items.length > 3 ? ` + ${lastSim.items.length - 3} mais` : ''}
+                      {t('dashboard.outcome_buy_fmt', { tickers: lastSim.items.slice(0,3).map((i: {asset?: {ticker?: string}}) => i.asset?.ticker).filter(Boolean).join(', '), more: lastSim.items.length > 3 ? t('dashboard.outcome_more', { n: lastSim.items.length - 3 }) : '' })}
                     </div>
                   )}
                   {!nextExDiv && decision.type === 'oportunidade' && (
                     <div style={{ fontSize: '12px', color: '#FCA5A5', fontWeight: '600' }}>
-                      ✓ Resultado esperado: reduzir desconto do PM e aumentar posição estratégica
+                      {t('dashboard.outcome_reduce_pm_txt')}
                     </div>
                   )}
                 </div>
@@ -408,7 +408,7 @@ export default function DashboardPage() {
                     ? [{ label: `Ex-div em ${nextExDiv.daysLeft}d`, value: formatCurrency(nextExDiv.ev.expected_amount), color: '#FDE68A' }]
                     : window.ready
                     ? [{ label: t('dashboard.strip_window'), value: t('dashboard.strip_window_open'), color: C.goldL }]
-                    : [{ label: t('dashboard.strip_next_contribution'), value: window.total_pending > 0 ? `Aguardando ${formatCurrency(window.total_pending)}` : '—', color: 'rgba(255,255,255,.35)' }]
+                    : [{ label: t('dashboard.strip_next_contribution'), value: window.total_pending > 0 ? t('dashboard.strip_waiting_amount', { amount: formatCurrency(window.total_pending) }) : '—', color: 'rgba(255,255,255,.35)' }]
                   ),
                 ].map(({ label, value, color }) => (
                   <div key={label}>
@@ -442,7 +442,7 @@ export default function DashboardPage() {
                   </div>
                   {redAssets.length > 0 && (
                     <div style={{ fontSize: '11px', fontWeight: '600', color: C.red }}>
-                      → Calcular aporte agora
+                      {t('dashboard.card_calc_now_arrow')}
                     </div>
                   )}
                 </div>
@@ -463,14 +463,14 @@ export default function DashboardPage() {
                   </div>
                   <div style={{ fontSize: '12px', color: window.ready ? 'rgba(255,255,255,.5)' : C.gray500, lineHeight: '1.5', marginBottom: '6px' }}>
                     {window.ready
-                      ? `${formatCurrency(window.total_received)} recebidos — aportar agora maximiza o capital disponível`
+                      ? t('dashboard.card_window_desc', { amount: formatCurrency(window.total_received) })
                       : window.total_pending > 0
-                      ? `Aguardando ${formatCurrency(window.total_pending)} em proventos`
+                      ? t('dashboard.card_waiting_amount', { amount: formatCurrency(window.total_pending) })
                       : t('dashboard.card_register_proventos')}
                   </div>
                   {window.ready && (
                     <div style={{ fontSize: '11px', fontWeight: '600', color: C.goldL }}>
-                      → Aportar agora
+                      {t('dashboard.card_contribute_now_arrow')}
                     </div>
                   )}
                 </div>
@@ -488,7 +488,7 @@ export default function DashboardPage() {
                     {/* Urgency badge */}
                     <div style={{ position: 'absolute', top: '12px', right: '12px', background: nextExDiv.daysLeft <= 3 ? '#FEF3C7' : '#FFF7ED', color: '#92400E', fontSize: '9px', fontWeight: '800', padding: '2px 8px', borderRadius: '20px', letterSpacing: '1px', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '3px' }}>
                       <Flame size={8} color="#92400E" />
-                      {nextExDiv.daysLeft === 0 ? 'Hoje!' : `${nextExDiv.daysLeft}d`}
+                      {nextExDiv.daysLeft === 0 ? t('dashboard.badge_today') : t('dashboard.badge_days', { n: nextExDiv.daysLeft })}
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '10px' }}>
                       <Timer size={13} color="#92400E" />
@@ -531,7 +531,7 @@ export default function DashboardPage() {
                     </div>
                     <div style={{ fontSize: '20px', fontWeight: '800', color: C.gray300, marginBottom: '6px' }}>—</div>
                     <div style={{ fontSize: '12px', color: C.gray400, lineHeight: '1.5' }}>
-                      Registre proventos em Proventos para ver datas ex-dividendo
+                      {t('dashboard.card_register_ex_dates')}
                     </div>
                   </div>
                 )}
@@ -556,7 +556,7 @@ export default function DashboardPage() {
               <StatCard label={t('dashboard.kpi_patrimony')} value={formatCurrency(totalValue)} sub={`${assets.length} ativo${assets.length !== 1 ? 's' : ''}`} accent={C.gold} icon={<TrendingUp size={15} />} />
               <StatCard label={t('dashboard.kpi_dividends_month')} value={formatCurrency(thisMonthDivs)} sub={`${dividends.filter(d => { const dt = new Date(d.payment_date); const n = new Date(); return dt.getMonth() === n.getMonth() && dt.getFullYear() === n.getFullYear(); }).length} evento${dividends.length !== 1 ? 's' : ''}`} color={thisMonthDivs > 0 ? C.green : undefined} accent={C.green} icon={<CalendarDays size={15} />} />
               <StatCard label={t('dashboard.kpi_red_assets')} value={String(redAssets.length)} sub={t('dashboard.kpi_priority_note')} color={redAssets.length > 0 ? C.red : C.green} accent={redAssets.length > 0 ? C.red : C.green} icon={<AlertCircle size={15} />} />
-              <StatCard label={totalPL >= 0 ? 'Resultado Total' : 'Resultado Total'} value={`${totalPL >= 0 ? '+' : ''}${formatCurrency(totalPL)}`} sub={totalCost > 0 ? `${((totalPL / totalCost) * 100).toFixed(1)}% sobre custo` : '—'} color={totalPL >= 0 ? C.green : C.red} accent={totalPL >= 0 ? C.green : C.red} icon={<TrendingUp size={15} />} />
+              <StatCard label={t('dashboard.result_total')} value={`${totalPL >= 0 ? '+' : ''}${formatCurrency(totalPL)}`} sub={totalCost > 0 ? `${((totalPL / totalCost) * 100).toFixed(1)}% sobre custo` : '—'} color={totalPL >= 0 ? C.green : C.red} accent={totalPL >= 0 ? C.green : C.red} icon={<TrendingUp size={15} />} />
             </>)}
           </div>
         )}
@@ -566,14 +566,14 @@ export default function DashboardPage() {
           <div style={{ background: '#FFFBEB', border: `1px solid ${C.gold}44`, borderLeft: `4px solid ${C.gold}`, borderRadius: '14px', padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '20px', marginBottom: '20px', flexWrap: 'wrap' }}>
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
-                <div style={{ fontSize: '10px', fontWeight: '700', color: C.gold, letterSpacing: '1.5px', textTransform: 'uppercase' }}>✦ Advanced Mode — Renda Projetada</div>
+                <div style={{ fontSize: '10px', fontWeight: '700', color: C.gold, letterSpacing: '1.5px', textTransform: 'uppercase' }}>{t('dashboard.adv_income_label')}</div>
                 {thisMonthDivs / totalValue * 1200 > 8 && (
                   <div style={{ background: `${C.green}22`, border: `1px solid ${C.green}44`, borderRadius: '20px', padding: '2px 8px', fontSize: '9px', fontWeight: '800', color: C.green, letterSpacing: '1px', textTransform: 'uppercase' }}>
                     Alto Yield
                   </div>
                 )}
               </div>
-              <div style={{ fontSize: '13px', color: C.gray600, marginBottom: '2px' }}>Projeção anual (baseada nos proventos deste mês)</div>
+              <div style={{ fontSize: '13px', color: C.gray600, marginBottom: '2px' }}>{t('dashboard.adv_income_desc')}</div>
               <div style={{ fontFamily: 'var(--mono)', fontSize: '22px', fontWeight: '800', color: C.gold }}>
                 {formatCurrency(thisMonthDivs * 12)}<span style={{ fontSize: '12px', color: C.gray400, fontFamily: 'var(--font)', fontWeight: '500', marginLeft: '8px' }}>/ano estimado</span>
               </div>
@@ -609,11 +609,11 @@ export default function DashboardPage() {
                   {window.ready ? t('dashboard.window_open_label') : t('dashboard.window_waiting_label')}
                 </div>
                 <div style={{ fontSize: '16px', fontWeight: '800', color: C.white, letterSpacing: '-0.3px', lineHeight: '1.3' }}>
-                  {window.ready ? t('dashboard.window_ideal') : dividends.length === 0 ? t('dashboard.window_configure') : `Aguardando ${formatCurrency(window.total_pending)}`}
+                  {window.ready ? t('dashboard.window_ideal') : dividends.length === 0 ? t('dashboard.window_configure') : t('dashboard.strip_waiting_amount', { amount: formatCurrency(window.total_pending) })}
                 </div>
-                {window.last_payment_date && (<div style={{ fontSize: '11px', color: 'rgba(255,255,255,.35)', marginTop: '4px' }}>Último pagamento: {formatDate(window.last_payment_date)}</div>)}
+                {window.last_payment_date && (<div style={{ fontSize: '11px', color: 'rgba(255,255,255,.35)', marginTop: '4px' }}>{t('dashboard.window_last_payment', { date: formatDate(window.last_payment_date) })}</div>)}
               </div>
-              <Link href="/contribution" style={{ flexShrink: 0 }}><Button variant="gold" size="sm">Aportar →</Button></Link>
+              <Link href="/contribution" style={{ flexShrink: 0 }}><Button variant="gold" size="sm">{t('dashboard.contribute_btn')} →</Button></Link>
             </div>
             {window.total_expected > 0 && (
               <div style={{ display: 'flex', gap: '20px', borderTop: '1px solid rgba(255,255,255,.08)', paddingTop: '14px', flexWrap: 'wrap' }}>
@@ -637,7 +637,7 @@ export default function DashboardPage() {
           <div className="dash-two-col" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>
             {/* Allocation */}
             <Card>
-              <CardHeader action={<Link href="/portfolio"><Button variant="ghost" size="sm">Ver carteira →</Button></Link>}>Alocação por Classe</CardHeader>
+              <CardHeader action={<Link href="/portfolio"><Button variant="ghost" size="sm">{t('dashboard.view_portfolio_btn')}</Button></Link>}>Alocação por Classe</CardHeader>
               <CardBody>
                 {classes.length === 0 ? <EmptyState icon="📂" title="Sem classes" description="Configure em Estratégia" /> : classes.map(cls => {
                   const val = assets.filter(a => a.asset_class_id === cls.id).reduce((s, a) => s + (holdingsMap[a.id]?.quantity ?? 0) * a.current_price, 0);
@@ -731,7 +731,7 @@ export default function DashboardPage() {
                 })}
                 {lastSim.items.length > (mode === 'simple' ? 3 : 5) && (
                   <div style={{ padding: '10px 0', fontSize: '12px', color: C.gray400, textAlign: 'center' }}>
-                    {t('dashboard.more_items', { count: lastSim.items.length - (mode === 'simple' ? 3 : 5) })} · <Link href="/contribution" style={{ color: C.blue, textDecoration: 'none' }}>Recalcular aporte</Link>
+                    {t('dashboard.more_items', { count: lastSim.items.length - (mode === 'simple' ? 3 : 5) })} · <Link href="/contribution" style={{ color: C.blue, textDecoration: 'none' }}>{t('dashboard.recalculate_link')}</Link>
                   </div>
                 )}
                 {lastSim.leftover > 0 && (
@@ -800,59 +800,69 @@ function AdvancedModeLockTeaser({ totalValue, thisMonthDivs, classes, assets, ho
     { label: t('dashboard.lock_yield_avg'), val: yieldPct > 0 ? `${yieldPct.toFixed(2)}% / mês` : '??.??%' },
   ];
 
+  // STRUCTURAL FIX for layout shift:
+  // Both the blurred background and the overlay are position:absolute.
+  // The outer container has a FIXED height (not min-height) so it NEVER
+  // changes size regardless of data changes or re-renders.
   return (
-    <div className="advanced-lock-outer" style={{ position: 'relative', minHeight: '200px' }}>
-      {/* Blurred real data — fixed height prevents layout shift on data changes */}
-      <div className="advanced-lock-blur">
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '10px', marginBottom: '10px' }}>
+    <div style={{
+      position: 'relative',
+      height: '224px',           /* fixed — never changes on re-render */
+      marginBottom: '20px',
+      marginTop: '4px',
+      borderRadius: '16px',
+      overflow: 'hidden',
+      flexShrink: 0,
+    }}>
+      {/* Blurred background data — position:absolute so it doesn't affect height */}
+      <div style={{
+        position: 'absolute', inset: 0,
+        filter: 'blur(6px)', pointerEvents: 'none', userSelect: 'none', opacity: 0.4,
+        padding: '16px', display: 'flex', flexDirection: 'column', gap: '10px',
+      }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '8px', flex: 1 }}>
           {items.map(({ label, val }) => (
-            <div key={label} style={{ background: C.white, border: `1px solid ${C.gray200}`, borderRadius: '14px', padding: '18px' }}>
-              <div style={{ fontSize: '10px', color: C.gray400, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '8px' }}>{label}</div>
-              <div style={{ fontSize: '20px', fontWeight: '800', color: C.navy }}>{val}</div>
+            <div key={label} style={{ background: C.white, border: `1px solid ${C.gray200}`, borderRadius: '12px', padding: '14px' }}>
+              <div style={{ fontSize: '9px', color: C.gray400, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '6px' }}>{label}</div>
+              <div style={{ fontSize: '17px', fontWeight: '800', color: C.navy }}>{val}</div>
             </div>
           ))}
         </div>
-        <div style={{ background: '#FFFBEB', border: `1px solid ${C.gold}44`, borderRadius: '14px', padding: '16px 20px', display: 'flex', justifyContent: 'space-between' }}>
+        <div style={{ background: '#FFFBEB', border: `1px solid ${C.gold}44`, borderRadius: '12px', padding: '10px 14px', display: 'flex', justifyContent: 'space-between', flexShrink: 0 }}>
           <div>
-            <div style={{ fontSize: '10px', color: C.gold, fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '4px' }}>P&L Total</div>
-            <div style={{ fontSize: '22px', fontWeight: '800', color: totalPL >= 0 ? C.green : C.red, fontFamily: 'var(--mono)' }}>
-              {totalPL >= 0 ? '+' : ''}{formatCurrency(totalPL)}
-            </div>
+            <div style={{ fontSize: '9px', color: C.gold, fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '2px' }}>{t('dashboard.lock_pnl_total')}</div>
+            <div style={{ fontSize: '16px', fontWeight: '800', color: totalPL >= 0 ? C.green : C.red, fontFamily: 'var(--mono)' }}>{totalPL >= 0 ? '+' : ''}{formatCurrency(totalPL)}</div>
           </div>
           <div style={{ textAlign: 'right' }}>
-            <div style={{ fontSize: '10px', color: C.gray400, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '4px' }}>Por Classe</div>
-            <div style={{ fontSize: '14px', fontWeight: '700', color: C.gray600 }}>{classes.length} classes</div>
+            <div style={{ fontSize: '9px', color: C.gray400, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '2px' }}>{t('dashboard.lock_by_class_lbl')}</div>
+            <div style={{ fontSize: '12px', fontWeight: '700', color: C.gray600 }}>{classes.length}</div>
           </div>
         </div>
       </div>
 
-      {/* Lock overlay */}
+      {/* Lock overlay — position:absolute, fills the fixed-height parent */}
       <div style={{
         position: 'absolute', inset: 0,
-        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-        background: 'rgba(248,250,252,.75)', backdropFilter: 'blur(3px)', borderRadius: '16px',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        background: 'rgba(248,250,252,.82)', backdropFilter: 'blur(2px)',
       }}>
-        <div style={{ textAlign: 'center', padding: '28px 24px', maxWidth: '380px' }}>
-          <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: `${C.gold}18`, border: `1px solid ${C.gold}33`, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
-            <span style={{ fontSize: '20px' }}>🔒</span>
+        <div style={{ textAlign: 'center', padding: '0 24px', maxWidth: '340px' }}>
+          <div style={{ fontSize: '10px', fontWeight: '800', color: C.gold, letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: '6px' }}>
+            {t('dashboard.lock_title_inner')}
           </div>
-          <div style={{ fontSize: '11px', fontWeight: '800', color: C.gold, letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: '8px' }}>
-            ✦ Advanced Mode — Bloqueado
+          <div style={{ fontSize: '15px', fontWeight: '800', color: C.navy, marginBottom: '6px', letterSpacing: '-0.3px' }}>
+            {t('dashboard.lock_subtitle_inner')}
           </div>
-          <div style={{ fontSize: '17px', fontWeight: '800', color: C.navy, marginBottom: '8px', letterSpacing: '-0.4px' }}>
-            Desbloqueie a análise completa
-          </div>
-          <div style={{ fontSize: '13px', color: C.gray500, lineHeight: '1.7', marginBottom: '20px' }}>
-            <strong>{t('dashboard.lock_features')}</strong>
-            <br />
+          <div style={{ fontSize: '11px', color: C.gray500, lineHeight: '1.6', marginBottom: '14px' }}>
+            <strong>{t('dashboard.lock_features')}</strong><br />
             {t('dashboard.lock_features2')}
           </div>
           <Link href="/upgrade?ref=advanced_mode&plan=ADVANCED">
-            <Button variant="gold" size="sm" style={{ fontSize: '13px', padding: '11px 24px', boxShadow: `0 4px 20px ${C.gold}44` }}>
-              Desbloquear Advanced Mode →
+            <Button variant="gold" size="sm" style={{ fontSize: '12px', padding: '9px 20px', boxShadow: `0 4px 16px ${C.gold}44` }}>
+              {t('dashboard.lock_btn_inner')}
             </Button>
           </Link>
-          <div style={{ fontSize: '11px', color: C.gray400, marginTop: '12px' }}>R$ 49/mês · Cancele quando quiser</div>
+          <div style={{ fontSize: '10px', color: C.gray400, marginTop: '8px' }}>{t('dashboard.lock_price_inner')}</div>
         </div>
       </div>
     </div>
@@ -870,14 +880,14 @@ function RedAssetsCard({ redAssets, holdingsMap, classes, totalValue }: {
   const groups = useMemo(() => {
     const map: Record<string, { id: string; name: string; assets: Asset[] }> = {};
     classes.forEach(c => { map[c.id] = { id: c.id, name: c.name, assets: [] }; });
-    map['__none__'] = { id: '__none__', name: 'Sem Classe', assets: [] };
+    map['__none__'] = { id: '__none__', name: t('dashboard.no_class_name'), assets: [] };
     redAssets.forEach(a => { const key = a.asset_class_id && map[a.asset_class_id] ? a.asset_class_id : '__none__'; map[key].assets.push(a); });
     return Object.values(map).filter(g => g.assets.length > 0);
   }, [redAssets, classes]);
 
   return (
     <Card>
-      <CardHeader action={<Badge color="red">{redAssets.length} ativo{redAssets.length !== 1 ? 's' : ''}</Badge>}>🔴 Ativos Vermelhos</CardHeader>
+      <CardHeader action={<Badge color="red">{redAssets.length === 1 ? t('dashboard.red_asset_count', { count: redAssets.length }) : t('dashboard.red_asset_count_pl', { count: redAssets.length })}</Badge>}>🔴 Ativos Vermelhos</CardHeader>
       <CardBody style={{ padding: '0 24px 16px' }}>
         {redAssets.length === 0
           ? <EmptyState icon="✅" title={`${t('dashboard.everything_ok')} ${t('dashboard.all_healthy')}`} description={t('dashboard.no_assets_below_pm')} />

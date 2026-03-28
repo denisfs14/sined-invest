@@ -8,6 +8,7 @@ import { adminFetchUser, adminUpdateUser } from '@/services/admin.service';
 import { getBillingStatusColor } from '@/lib/access-control';
 import type { UserProfile } from '@/lib/access-control';
 import { C } from '@/components/ui';
+import { useT } from '@/lib/i18n';
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
@@ -30,6 +31,7 @@ export default function AdminUserDetailPage() {
   const id     = params.get('id') ?? '';
   const router = useRouter();
 
+  const { t } = useT();
   const [user,    setUser]    = useState<UserProfile | null>(null);
   const [form,    setForm]    = useState<Partial<UserProfile>>({});
   const [loading, setLoading] = useState(true);
@@ -58,7 +60,7 @@ export default function AdminUserDetailPage() {
     setSaving(true);
     try {
       await adminUpdateUser(id, form);
-      setToast('Salvo com sucesso ✓');
+      setToast(t('admin.saved_ok'));
       setTimeout(() => setToast(''), 3000);
     } catch (e) { setToast(`Erro: ${e}`); }
     setSaving(false);
@@ -68,8 +70,8 @@ export default function AdminUserDetailPage() {
     setForm(f => ({ ...f, [key]: val }));
   }
 
-  if (loading) return <div style={{ padding: '32px', color: 'rgba(255,255,255,.4)', fontSize: '13px' }}>Carregando…</div>;
-  if (!user)   return <div style={{ padding: '32px', color: '#F87171', fontSize: '13px' }}>Usuário não encontrado</div>;
+  if (loading) return <div style={{ padding: '32px', color: 'rgba(255,255,255,.4)', fontSize: '13px' }}>{t('admin.loading')}</div>;
+  if (!user)   return <div style={{ padding: '32px', color: '#F87171', fontSize: '13px' }}>{t('admin.user_not_found')}</div>;
 
   return (
     <div style={{ padding: '32px', color: C.white, maxWidth: '680px' }}>
@@ -123,7 +125,7 @@ export default function AdminUserDetailPage() {
               <option value="trial">trial</option><option value="canceled">canceled</option><option value="past_due">past_due</option>
             </select>
           </Field>
-          <Field label="Acesso expira em">
+          <Field label={t('admin.access_expires')}>
             <input type="datetime-local" value={(form.access_expires_at ?? '').slice(0, 16)} onChange={e => set('access_expires_at', e.target.value || null)} style={IS as React.CSSProperties} />
           </Field>
         </div>
@@ -143,7 +145,7 @@ export default function AdminUserDetailPage() {
       </div>
 
       <button onClick={save} disabled={saving} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '12px 24px', background: '#EF4444', border: 'none', borderRadius: '10px', color: C.white, fontSize: '13px', fontWeight: '800', fontFamily: 'var(--font)', cursor: saving ? 'wait' : 'pointer' }}>
-        <Save size={14} /> {saving ? 'Salvando…' : 'Salvar Alterações'}
+        <Save size={14} /> {saving ? t('admin.saving_btn') : t('admin.save_btn')}
       </button>
     </div>
   );

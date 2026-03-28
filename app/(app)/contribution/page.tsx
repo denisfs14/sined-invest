@@ -83,7 +83,7 @@ export default function ContributionPage() {
   }
 
   function save() {
-    if (!result || result.items.length === 0) return notify('Nada para salvar', 'error');
+    if (!result || result.items.length === 0) return notify(t('contribution.nothing_to_save'), 'error');
     saveSimulation({
       portfolio_id: portfolio.id,
       total_amount: result.total_available,
@@ -98,7 +98,7 @@ export default function ContributionPage() {
         asset: item.asset,
       })),
     });
-    notify('Simulação salva no histórico ✓');
+    notify(t('contribution.saved_ok'));
   }
 
   return (
@@ -136,10 +136,10 @@ export default function ContributionPage() {
                 </div>
                 <div style={{ fontSize: '12px', color: window.ready ? 'rgba(255,255,255,.4)' : '#92400E', lineHeight: '1.5' }}>
                   {window.ready
-                    ? `${formatCurrency(window.total_received)} recebidos este mês · Aportar agora maximiza o capital disponível`
+                    ? t('contribution.window_received_desc', { amount: formatCurrency(window.total_received) })
                     : window.last_payment_date
-                    ? `Aguardando ${formatCurrency(window.total_pending)} — previsto ${formatDate(window.last_payment_date)}`
-                    : 'Registre proventos em Proventos para ativar a janela inteligente'}
+                    ? t('contribution.window_waiting_desc', { amount: formatCurrency(window.total_pending), date: formatDate(window.last_payment_date ?? '') })
+                    : t('contribution.window_config_note')}
                 </div>
               </div>
             </div>
@@ -311,7 +311,7 @@ export default function ContributionPage() {
                 icon="🧮"
                 title="Pronto para calcular"
                 description={assets.length === 0
-                  ? 'Adicione ativos à carteira antes de calcular'
+                  ? t('contribution.no_assets_calc')
                   : 'Informe o aporte acima e clique em Calcular'}
               />
             </CardBody>

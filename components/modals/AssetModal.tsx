@@ -1,4 +1,5 @@
 'use client';
+import { useT } from '@/lib/i18n';
 
 import { useEffect, useState } from 'react';
 import { Asset, AssetClass } from '@/types';
@@ -21,7 +22,9 @@ const blank = {
   is_red: false,
 };
 
-export function AssetModal({ open, onClose, onSave, onUpdate, classes, portfolioId, defaultMaxPct, editAsset }: Props) {
+export function AssetModal({
+  open, onClose, onSave, onUpdate, classes, portfolioId, defaultMaxPct, editAsset }: Props) {
+  const { t } = useT();
   const [f, setF] = useState({ ...blank });
 
   useEffect(() => {
@@ -72,28 +75,28 @@ export function AssetModal({ open, onClose, onSave, onUpdate, classes, portfolio
 
   return (
     <Modal open={open} onClose={onClose}
-      title={editAsset ? 'Editar Ativo' : 'Adicionar Ativo'}
+      title={editAsset ? t('modals.edit_asset') : t('modals.add_asset')}
       subtitle={editAsset ? 'Atualize os dados do ativo' : 'Cadastre um novo ativo na carteira'}
       width={560}>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
-          <FormGroup label="Ticker *">
+          <FormGroup label={t('modals.form_ticker')}>
             <Input placeholder="PETR4" value={f.ticker} onChange={e => set('ticker', e.target.value.toUpperCase())} />
           </FormGroup>
-          <FormGroup label="Nome">
+          <FormGroup label={t('modals.form_name')}>
             <Input placeholder="Petrobras PN" value={f.name} onChange={e => set('name', e.target.value)} />
           </FormGroup>
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
-          <FormGroup label="Classe">
+          <FormGroup label={t('modals.form_class')}>
             <Select value={f.asset_class_id} onChange={e => set('asset_class_id', e.target.value)}>
               <option value="">— Sem classe —</option>
               {classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
             </Select>
           </FormGroup>
-          <FormGroup label="Preço Atual (R$) *">
+          <FormGroup label={t('modals.form_price')}>
             <Input type="number" min="0" step="0.01" placeholder="32.50"
               value={f.current_price} onChange={e => set('current_price', e.target.value)} />
           </FormGroup>
@@ -115,7 +118,7 @@ export function AssetModal({ open, onClose, onSave, onUpdate, classes, portfolio
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
-          <FormGroup label="Preço Médio (R$)">
+          <FormGroup label={t('modals.form_avg_price')}>
             <Input type="number" min="0" step="0.01" placeholder="30.00"
               value={f.avg_price} onChange={e => set('avg_price', e.target.value)} />
           </FormGroup>

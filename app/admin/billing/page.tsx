@@ -5,8 +5,10 @@ import { adminFetchUsers, adminUpdateUser } from '@/services/admin.service';
 import { getBillingStatusColor, getBillingStatusLabel } from '@/lib/access-control';
 import type { UserProfile } from '@/lib/access-control';
 import { C } from '@/components/ui';
+import { useT } from '@/lib/i18n';
 
 export default function AdminBillingPage() {
+  const { t } = useT();
   const [users,   setUsers]   = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving,  setSaving]  = useState<string | null>(null);
@@ -22,7 +24,7 @@ export default function AdminBillingPage() {
     try {
       await adminUpdateUser(id, updates);
       setUsers(prev => prev.map(u => u.id === id ? { ...u, ...updates } : u));
-      setToast('Salvo ✓'); setTimeout(() => setToast(''), 2000);
+      setToast(t('admin.saved_ok')); setTimeout(() => setToast(''), 2000);
     } catch (e) { setToast(String(e)); }
     setSaving(null);
   }
@@ -49,7 +51,7 @@ export default function AdminBillingPage() {
       {toast && <div style={{ marginBottom: '16px', fontSize: '12px', fontWeight: '700', color: '#4ADE80' }}>{toast}</div>}
 
       {loading ? (
-        <div style={{ color: 'rgba(255,255,255,.3)', fontSize: '13px' }}>Carregando…</div>
+        <div style={{ color: 'rgba(255,255,255,.3)', fontSize: '13px' }}>{t('admin.loading')}</div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
           {(Object.entries(byStatus) as [UserProfile['billing_status'], UserProfile[]][]).map(([status, list]) => (

@@ -76,9 +76,9 @@ export default function StrategyPage() {
         }))
       );
       setDirty(false);
-      notify('Alocação salva com sucesso ✓');
+      notify(t('strategy.saved_ok'));
     } catch {
-      notify('Erro ao salvar', 'error');
+      notify(t('strategy.save_error'), 'error');
     } finally {
       setSaving(false);
     }
@@ -95,14 +95,14 @@ export default function StrategyPage() {
     });
     setClassName(''); setClassTarget(''); setClassContrib(''); setClassTopN('1');
     setShowClass(false);
-    notify('Classe criada');
+    notify(t('strategy.class_created'));
   }
 
   function handleDelete(id: string) {
     const cls = classes.find(c => c.id === id);
     if (!cls || !confirm(`Remover classe "${cls.name}"?`)) return;
     deleteClass(id);
-    notify('Classe removida');
+    notify(t('strategy.class_removed'));
   }
 
   const totalContribPct = drafts.reduce((s, d) => s + (d.contribution_percentage || 0), 0);
@@ -196,10 +196,10 @@ export default function StrategyPage() {
                   fontSize: '10px', fontWeight: '700', color: C.gray400,
                   letterSpacing: '1px', textTransform: 'uppercase',
                 }}>
-                  <span>Classe</span>
+                  <span>{t('strategy.col_class')}</span>
                   <span>% do Aporte Mensal</span>
                   <span>Qtd. Ativos (Top N)</span>
-                  <span>Total</span>
+                  <span>{t('strategy.col_total')}</span>
                   <span></span>
                 </div>
 
@@ -355,7 +355,7 @@ export default function StrategyPage() {
                   <BtnStep onClick={() => upd('max_percentage', Math.min(100, strategy.max_percentage + 1))}>+</BtnStep>
                 </div>
               </Row>
-              <Row title="Priorizar Vermelhos" desc="Preferência para ativos marcados como oportunidade">
+              <Row title={t('strategy.prioritize_red_title')} desc={t('strategy.prioritize_red_desc')}>
                 <Toggle value={strategy.prioritize_red} onChange={v => upd('prioritize_red', v)} />
               </Row>
               <Row title="Fallback para Menor %" desc="Se vermelhos excederem limite, usar menor alocado">
@@ -423,7 +423,7 @@ export default function StrategyPage() {
         title="Nova Classe de Ativos" width={480}
         subtitle="Configure o nome e as regras de aporte desta classe">
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <FormGroup label="Nome da Classe *">
+          <FormGroup label={t('strategy.form_class_name')}>
             <Input placeholder="Ex: Ações BR, FIIs, Renda Fixa..."
               value={className} onChange={e => setClassName(e.target.value)} />
           </FormGroup>

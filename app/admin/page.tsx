@@ -6,6 +6,7 @@ import { adminFetchUsers, adminFetchStats, type AdminStats } from '@/services/ad
 import type { UserProfile } from '@/lib/access-control';
 import { getBillingStatusColor, getBillingStatusLabel } from '@/lib/access-control';
 import { C } from '@/components/ui';
+import { useT } from '@/lib/i18n';
 
 function StatTile({ label, value, icon: Icon, color = C.white }: { label: string; value: number; icon: React.ElementType; color?: string }) {
   return (
@@ -20,6 +21,7 @@ function StatTile({ label, value, icon: Icon, color = C.white }: { label: string
 }
 
 export default function AdminOverviewPage() {
+  const { t } = useT();
   const [stats,   setStats]   = useState<AdminStats | null>(null);
   const [users,   setUsers]   = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);
@@ -47,20 +49,20 @@ export default function AdminOverviewPage() {
       {error && <div style={{ background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: '10px', padding: '12px 16px', color: '#DC2626', fontSize: '13px', marginBottom: '20px' }}>{error}</div>}
 
       {loading ? (
-        <div style={{ color: 'rgba(255,255,255,.3)', fontSize: '13px' }}>Carregando…</div>
+        <div style={{ color: 'rgba(255,255,255,.3)', fontSize: '13px' }}>{t('admin.loading')}</div>
       ) : stats && (
         <>
           {/* Stats grid */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '14px', marginBottom: '32px' }}>
-            <StatTile label="Total Usuários"  value={stats.total}         icon={Users}     />
-            <StatTile label="Ativos"           value={stats.active}        icon={UserCheck} color="#4ADE80" />
-            <StatTile label="Inativos"         value={stats.inactive}      icon={UserX}     color="#F87171" />
-            <StatTile label="Plano Free"       value={stats.free}          icon={Users}     color="rgba(255,255,255,.5)" />
-            <StatTile label="Plano Simple"     value={stats.simple}        icon={CreditCard}color="#93C5FD" />
-            <StatTile label="Plano Advanced"   value={stats.advanced}      icon={Star}      color={C.goldL} />
-            <StatTile label="Trial"            value={stats.trial}         icon={CreditCard}color="#93C5FD" />
-            <StatTile label="Acesso Especial"  value={stats.specialAccess} icon={Shield}    color="#C4B5FD" />
-            <StatTile label="Admins"           value={stats.admins}        icon={Shield}    color="#F87171" />
+            <StatTile label={t('admin.stat_total')}  value={stats.total}         icon={Users}     />
+            <StatTile label={t('admin.stat_active')}           value={stats.active}        icon={UserCheck} color="#4ADE80" />
+            <StatTile label={t('admin.stat_inactive')}         value={stats.inactive}      icon={UserX}     color="#F87171" />
+            <StatTile label={t('admin.stat_free')}       value={stats.free}          icon={Users}     color="rgba(255,255,255,.5)" />
+            <StatTile label={t('admin.stat_simple')}     value={stats.simple}        icon={CreditCard}color="#93C5FD" />
+            <StatTile label={t('admin.stat_advanced')}   value={stats.advanced}      icon={Star}      color={C.goldL} />
+            <StatTile label={t('admin.stat_trial')}            value={stats.trial}         icon={CreditCard}color="#93C5FD" />
+            <StatTile label={t('admin.stat_special')}  value={stats.specialAccess} icon={Shield}    color="#C4B5FD" />
+            <StatTile label={t('admin.stat_admins')}           value={stats.admins}        icon={Shield}    color="#F87171" />
           </div>
 
           {/* Recent users */}

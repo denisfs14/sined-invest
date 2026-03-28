@@ -42,7 +42,7 @@ export default function PortfolioPage() {
     classes.forEach(cls => {
       map[cls.id] = { id: cls.id, name: cls.name, target: cls.target_percentage, assets: [], value: 0, pct: 0 };
     });
-    map['__none__'] = { id: '__none__', name: 'Sem Classe', target: 0, assets: [], value: 0, pct: 0 };
+    map['__none__'] = { id: '__none__', name: t('portfolio.no_class'), target: 0, assets: [], value: 0, pct: 0 };
 
     assets.forEach(a => {
       const key = a.asset_class_id && map[a.asset_class_id] ? a.asset_class_id : '__none__';
@@ -86,23 +86,23 @@ export default function PortfolioPage() {
     if (!className.trim()) return;
     addClass({ portfolio_id: portfolio.id, name: className.trim(), target_percentage: parseFloat(classTarget) || 0, contribution_percentage: 0, top_n: 1 });
     setClassName(''); setClassTarget(''); setShowClass(false);
-    notify('Classe criada');
+    notify(t('portfolio.class_created'));
   }
 
   // Table columns — now with Preço Médio, Preço Dia, Resultado
-  const COLS = ['Ticker', 'Nome', 'Qtd.', 'Preço Médio', 'Preço Dia', 'Resultado', 'Valor', '% Carteira', '% Alvo', 'Status', ''];
+  const COLS = [t('portfolio.col_ticker'), t('portfolio.col_name'), t('portfolio.col_qty'), t('portfolio.col_avg_price'), t('portfolio.col_day_price'), t('portfolio.col_result'), t('portfolio.col_value'), t('portfolio.col_pct_portfolio'), t('portfolio.col_pct_target'), t('portfolio.col_status'), ''];
 
   return (
     <>
       <PageHeader
         title={t('portfolio.title')}
-        subtitle={`${assets.length} ativos · ${formatCurrency(totalValue)}`}
+        subtitle={`${assets.length === 1 ? t('portfolio.subtitle_assets', { count: assets.length }) : t('portfolio.subtitle_assets_pl', { count: assets.length })} · ${formatCurrency(totalValue)}`}
         action={
           <div style={{ display: 'flex', gap: '10px' }}>
             <Button variant="secondary" size="sm" onClick={() => setShowImport(true)}>{`📥 ${t('portfolio.import_btn')}`}</Button>
-            <Button variant="secondary" size="sm" onClick={async () => { notify('Sincronizando preços...'); await syncPricesNow(); notify('Preços atualizados! ✓'); }}>🔄 Atualizar Preços</Button>
-            <Button variant="secondary" size="sm" onClick={() => setShowClass(true)}>+ Classe</Button>
-            <Button variant="primary" size="sm" onClick={() => { setEditTarget(undefined); setShowAsset(true); }}>+ Ativo</Button>
+            <Button variant="secondary" size="sm" onClick={async () => { notify(t('portfolio.sync_prices_btn')); await syncPricesNow(); notify('Preços atualizados! ✓'); }}>🔄 Atualizar Preços</Button>
+            <Button variant="secondary" size="sm" onClick={() => setShowClass(true)}>{t('portfolio.add_class_btn')}</Button>
+            <Button variant="primary" size="sm" onClick={() => { setEditTarget(undefined); setShowAsset(true); }}>{t('portfolio.add_asset_btn')}</Button>
           </div>
         }
       />
@@ -151,8 +151,8 @@ export default function PortfolioPage() {
 
         {assets.length === 0 ? (
           <Card>
-            <EmptyState icon="💼" title="Carteira vazia"
-              description="Adicione seu primeiro ativo ou importe do Status Invest"
+            <EmptyState icon="💼" title={t('portfolio.empty_title')}
+              description={t('portfolio.empty_desc')}
               action={
                 <div style={{ display: 'flex', gap: '10px' }}>
                   <Button variant="secondary" onClick={() => setShowImport(true)}>{`📥 ${t('portfolio.import_btn')}`}</Button>
@@ -335,7 +335,7 @@ export default function PortfolioPage() {
                                 {/* Ações */}
                                 <td style={{ padding: '13px 14px' }}>
                                   <div style={{ display: 'flex', gap: '5px' }}>
-                                    <button onClick={() => handleEdit(asset)} title="Editar"
+                                    <button onClick={() => handleEdit(asset)} title={t('common.edit')}
                                       style={{ background: C.gray100, border: 'none', borderRadius: '6px', padding: '5px 8px', cursor: 'pointer', color: C.gray600 }}>
                                       <Pencil size={13} />
                                     </button>
@@ -346,8 +346,8 @@ export default function PortfolioPage() {
                                       <Circle size={13} fill={asset.is_red ? C.red : 'none'} />
                                     </button>
                                     <button
-                                      onClick={() => { if (confirm(`Remover ${asset.ticker}?`)) { deleteAsset(asset.id); notify('Ativo removido'); } }}
-                                      title="Remover"
+                                      onClick={() => { if (confirm(t('portfolio.confirm_remove', { ticker: asset.ticker }))) { deleteAsset(asset.id); notify(t('portfolio.asset_removed')); } }}
+                                      title={t('common.remove')}
                                       style={{ background: '#FEF2F2', border: 'none', borderRadius: '6px', padding: '5px 8px', cursor: 'pointer', color: C.red }}>
                                       <Trash2 size={13} />
                                     </button>
@@ -401,8 +401,8 @@ export default function PortfolioPage() {
       <AssetModal
         open={showAsset}
         onClose={handleClose}
-        onSave={(d, h) => { addAsset(d, h); notify('Ativo adicionado'); }}
-        onUpdate={(id, d, h) => { updateAsset(id, d, h); notify('Ativo atualizado'); }}
+        onSave={(d, h) => { addAsset(d, h); notify(t('portfolio.asset_added')); }}
+        onUpdate={(id, d, h) => { updateAsset(id, d, h); notify(t('portfolio.asset_updated')); }}
         classes={classes}
         portfolioId={portfolio.id}
         defaultMaxPct={strategy.max_percentage}
