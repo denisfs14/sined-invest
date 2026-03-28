@@ -234,3 +234,49 @@ body {
 @media (min-width: 480px) and (max-width: 768px) {
   .action-cards-grid { grid-template-columns: 1fr 1fr !important; }
 }
+
+/* ── Dashboard layout fixes ─────────────────────────────────────────────────── */
+
+/* Consistent vertical rhythm between dashboard sections */
+.dash-section { margin-bottom: 20px; }
+.dash-section:last-child { margin-bottom: 0; }
+
+/* Page content max width and consistent horizontal padding */
+.page-content { padding: 24px 28px; }
+@media (max-width: 768px) { .page-content { padding: 14px 14px 80px; } }
+
+/* Card body consistent padding */
+.card-body-padded { padding: 20px 24px; }
+
+/* Trust bar — flush with content, not floating */
+.trust-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 9px 14px;
+  background: #F1F5F9;
+  border: 1px solid #E2E8F0;
+  border-radius: 10px;
+  font-size: 11px;
+  color: #94A3B8;
+  margin-top: 24px;
+}
+
+/* Upgrade banner — no floating margin issues */
+.upgrade-banner-wrap { margin-bottom: 16px; }
+
+/* Simple mode decision block — tighter on desktop */
+@media (min-width: 769px) {
+  .decision-block { margin-bottom: 20px; }
+  .action-cards-grid { grid-template-columns: repeat(3, 1fr) !important; gap: 12px !important; }
+}
+
+/* Advanced mode KPI grid spacing */
+.kpi-grid { margin-bottom: 20px; }
+
+/* Remove orphaned spacing between consecutive dark cards */
+.dark-card + .dark-card { margin-top: -8px; }
+
+/* Blurred teaser — proper height to avoid collapsed empty space */
+.advanced-lock-teaser { min-height: 140px; }

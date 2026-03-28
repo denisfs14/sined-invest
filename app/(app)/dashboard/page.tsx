@@ -16,6 +16,7 @@ import {
   EmptyState, PageHeader, PageContent, PercentBar, Button, C,
 } from '@/components/ui';
 import { UpgradeBanner } from '@/components/ui/PlanGate';
+import { useT } from '@/lib/i18n';
 import { ModeToggle } from '@/components/ModeToggle';
 
 // ─── Skeleton ─────────────────────────────────────────────────────────────────
@@ -32,6 +33,7 @@ export default function DashboardPage() {
     mode, planData,
   } = useApp();
 
+  const { t } = useT();
   const [syncing,    setSyncing]    = useState(false);
   const [syncMsg,    setSyncMsg]    = useState('');
   const [lastSyncAt, setLastSyncAt] = useState<Date | null>(null);
@@ -187,7 +189,7 @@ export default function DashboardPage() {
 
       <PageHeader
         title="Dashboard"
-        subtitle={mode === 'advanced' ? 'Advanced Mode · Análise completa' : 'Simple Mode · Decisões rápidas'}
+        subtitle={mode === 'advanced' ? t('dashboard.subtitle_advanced') : t('dashboard.subtitle_simple')}
         action={
           <div className="page-header-actions">
             {syncMsg
@@ -196,10 +198,10 @@ export default function DashboardPage() {
             }
             <ModeToggle compact />
             <Button variant="secondary" size="sm" onClick={() => runSync(false)} loading={syncing}>
-              <RefreshCw size={13} /> Preços
+              <RefreshCw size={13} /> {t('dashboard.sync_prices')}
             </Button>
             <Link href="/contribution">
-              <Button variant="gold" size="sm"><Zap size={13} /> Aportar</Button>
+              <Button variant="gold" size="sm"><Zap size={13} /> {t('dashboard.contribute_btn')}</Button>
             </Link>
           </div>
         }
@@ -317,7 +319,7 @@ export default function DashboardPage() {
             SIMPLE MODE — "What should I do this month?" answer
         ══════════════════════════════════════════════════════════════════════ */}
         {!isEmpty && mode === 'simple' && !loading && decision && (
-          <div style={{ marginBottom: '24px' }}>
+          <div className="decision-block" style={{ marginBottom: '20px' }}>
 
             {/* Primary decision card */}
             <div style={{
@@ -342,7 +344,7 @@ export default function DashboardPage() {
                 </div>
               ) : (
                 <div style={{ fontSize: '10px', fontWeight: '700', color: decision.urgent ? C.gold : 'rgba(255,255,255,.3)', letterSpacing: '2px', textTransform: 'uppercase', marginBottom: '12px' }}>
-                  ✦ O que fazer este mês?
+                  ✦ {t('dashboard.what_to_do')}
                 </div>
               )}
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '20px', flexWrap: 'wrap' }}>
@@ -401,7 +403,7 @@ export default function DashboardPage() {
                 </div>
                 <Link href="/contribution">
                   <Button variant="gold" size="sm" style={{ fontSize: '14px', padding: '12px 24px', flexShrink: 0 }}>
-                    <Zap size={14} /> Calcular Aporte →
+                    <Zap size={14} /> {t('dashboard.calculate_btn')}
                   </Button>
                 </Link>
               </div>
@@ -438,7 +440,7 @@ export default function DashboardPage() {
                   )}
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '10px' }}>
                     <Target size={13} color={redAssets.length > 0 ? C.red : C.gray400} />
-                    <span style={{ fontSize: '10px', fontWeight: '700', color: redAssets.length > 0 ? C.red : C.gray400, textTransform: 'uppercase', letterSpacing: '1px' }}>Oportunidade</span>
+                    <span style={{ fontSize: '10px', fontWeight: '700', color: redAssets.length > 0 ? C.red : C.gray400, textTransform: 'uppercase', letterSpacing: '1px' }}>{t('dashboard.opportunity')}</span>
                   </div>
                   <div style={{ fontSize: '20px', fontWeight: '800', color: redAssets.length > 0 ? C.red : C.gray400, marginBottom: '6px' }}>
                     {redAssets.length > 0 ? `${redAssets.length} vermelho${redAssets.length !== 1 ? 's' : ''}` : 'Nenhum'}
@@ -464,7 +466,7 @@ export default function DashboardPage() {
                   )}
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '10px' }}>
                     <Zap size={13} color={window.ready ? C.goldL : C.gray400} />
-                    <span style={{ fontSize: '10px', fontWeight: '700', color: window.ready ? C.goldL : C.gray400, textTransform: 'uppercase', letterSpacing: '1px' }}>Janela de Aporte</span>
+                    <span style={{ fontSize: '10px', fontWeight: '700', color: window.ready ? C.goldL : C.gray400, textTransform: 'uppercase', letterSpacing: '1px' }}>{t('dashboard.buy_window')}</span>
                   </div>
                   <div style={{ fontSize: '20px', fontWeight: '800', color: window.ready ? C.white : C.gray400, marginBottom: '6px' }}>
                     {window.ready ? '✦ Aberta' : 'Aguardando'}
@@ -518,7 +520,7 @@ export default function DashboardPage() {
                   <div style={{ background: C.white, border: `1.5px solid ${C.gray200}`, borderRadius: '16px', padding: '18px', height: '100%' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '10px' }}>
                       <Clock size={13} color={C.gray400} />
-                      <span style={{ fontSize: '10px', fontWeight: '700', color: C.gray400, textTransform: 'uppercase', letterSpacing: '1px' }}>Próximo Provento</span>
+                      <span style={{ fontSize: '10px', fontWeight: '700', color: C.gray400, textTransform: 'uppercase', letterSpacing: '1px' }}>{t('dashboard.next_dividend')}</span>
                     </div>
                     <div style={{ fontSize: '20px', fontWeight: '800', color: C.navy, marginBottom: '6px' }}>
                       em {daysFromNow(upcomingDivs[0].payment_date)}d
@@ -535,7 +537,7 @@ export default function DashboardPage() {
                   <div style={{ background: C.white, border: `1.5px solid ${C.gray200}`, borderRadius: '16px', padding: '18px', height: '100%' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '10px' }}>
                       <Clock size={13} color={C.gray400} />
-                      <span style={{ fontSize: '10px', fontWeight: '700', color: C.gray400, textTransform: 'uppercase', letterSpacing: '1px' }}>Próximo Provento</span>
+                      <span style={{ fontSize: '10px', fontWeight: '700', color: C.gray400, textTransform: 'uppercase', letterSpacing: '1px' }}>{t('dashboard.next_dividend')}</span>
                     </div>
                     <div style={{ fontSize: '20px', fontWeight: '800', color: C.gray300, marginBottom: '6px' }}>—</div>
                     <div style={{ fontSize: '12px', color: C.gray400, lineHeight: '1.5' }}>
@@ -553,7 +555,7 @@ export default function DashboardPage() {
             BOTH MODES — KPI cards
         ══════════════════════════════════════════════════════════════════════ */}
         {mode === 'advanced' && (
-          <div className="stat-cards-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: '16px', marginBottom: '24px' }}>
+          <div className="stat-cards-grid kpi-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: '16px', marginBottom: '20px' }}>
             {loading ? Array.from({ length: 4 }).map((_, i) => (
               <Card key={i} style={{ borderTop: `3px solid ${C.gray200}` }}>
                 <div style={{ padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
@@ -700,8 +702,8 @@ export default function DashboardPage() {
         {/* ── LAST RECOMMENDATION ─────────────────────────────────────────────── */}
         {!isEmpty && (
           <Card>
-            <CardHeader action={<Link href="/contribution"><Button variant="gold" size="sm">Novo Aporte →</Button></Link>}>
-              {mode === 'advanced' ? 'Última Recomendação' : '📋 Último Aporte Calculado'}
+            <CardHeader action={<Link href="/contribution"><Button variant="gold" size="sm">{t('dashboard.new_contribution')}</Button></Link>}>
+              {mode === 'advanced' ? t('dashboard.last_recommendation') : `📋 ${t('dashboard.last_recommendation')}`}
             </CardHeader>
             <CardBody>
               {!lastSim || !lastSim.items || lastSim.items.length === 0 ? (
@@ -767,9 +769,9 @@ export default function DashboardPage() {
         {/* ── TRUST BAR ────────────────────────────────────────────────────────── */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap', padding: '10px 16px', background: '#F8FAFC', border: `1px solid ${C.gray200}`, borderRadius: '10px', marginTop: '20px', fontSize: '11px', color: C.gray400 }}>
           <ShieldAlert size={13} color={C.gray400} />
-          <span>Insights baseados em dados · Não é consultoria financeira</span>
-          <Link href="/methodology" target="_blank" style={{ color: C.blue, textDecoration: 'none', fontWeight: '600' }}>Como funciona →</Link>
-          <Link href="/legal/risk" target="_blank" style={{ color: C.gray400, textDecoration: 'none' }}>Riscos</Link>
+          <span>{t('dashboard.trust_bar')}</span>
+          <Link href="/methodology" target="_blank" style={{ color: C.blue, textDecoration: 'none', fontWeight: '600' }}>{t('dashboard.how_it_works')}</Link>
+          <Link href="/legal/risk" target="_blank" style={{ color: C.gray400, textDecoration: 'none' }}>{t('dashboard.risks')}</Link>
         </div>
 
       </PageContent>

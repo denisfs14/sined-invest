@@ -11,34 +11,38 @@ import {
 import { supabase } from '@/lib/supabase/client';
 import { C } from '@/components/ui';
 import { useApp } from '@/lib/app-context';
+import { useT } from '@/lib/i18n';
 import { ModeBadge } from '@/components/ui/PlanGate';
 import { ModeToggle } from '@/components/ModeToggle';
 import { getUserPlan } from '@/lib/plans';
 
-const NAV = [
-  { href: '/dashboard',    label: 'Dashboard',  icon: LayoutDashboard, group: 'Análise' },
-  { href: '/portfolio',    label: 'Carteira',   icon: Briefcase,       group: 'Análise' },
-  { href: '/contribution', label: 'Aportar',    icon: Zap,             group: 'Análise' },
-  { href: '/dividends',    label: 'Proventos',  icon: CalendarDays,    group: 'Análise' },
-  { href: '/operations',   label: 'Operações',  icon: ArrowLeftRight,  group: 'Análise' },
-  { href: '/strategy',     label: 'Estratégia', icon: Settings,        group: 'Config'  },
-  { href: '/history',      label: 'Histórico',  icon: History,         group: 'Config'  },
-  { href: '/settings',     label: 'Conta',      icon: UserCog,         group: 'Config'  },
-];
+// NAV is now computed inside the component using t()
 
 // Bottom nav items for mobile (most used 5)
-const MOBILE_NAV = [
-  { href: '/dashboard',    label: 'Home',      icon: LayoutDashboard },
-  { href: '/portfolio',    label: 'Carteira',  icon: Briefcase       },
-  { href: '/contribution', label: 'Aportar',   icon: Zap             },
-  { href: '/operations',   label: 'Operações', icon: ArrowLeftRight  },
-  { href: '/dividends',    label: 'Proventos', icon: CalendarDays    },
-];
+// MOBILE_NAV is computed inside component
 
 export function Sidebar() {
   const pathname  = usePathname();
   const router    = useRouter();
   const { user }  = useApp();
+  const { t }     = useT();
+  const MOBILE_NAV = [
+    { href: '/dashboard',    label: t('nav.dashboard'), icon: LayoutDashboard },
+    { href: '/portfolio',    label: t('nav.portfolio'), icon: Briefcase       },
+    { href: '/contribution', label: t('nav.contribute'),icon: Zap             },
+    { href: '/operations',   label: t('nav.operations'),icon: ArrowLeftRight  },
+    { href: '/dividends',    label: t('nav.dividends'), icon: CalendarDays    },
+  ];
+  const NAV = [
+    { href: '/dashboard',    label: t('nav.dashboard'), icon: LayoutDashboard, group: 'Analysis' },
+    { href: '/portfolio',    label: t('nav.portfolio'), icon: Briefcase,       group: 'Analysis' },
+    { href: '/contribution', label: t('nav.contribute'),icon: Zap,             group: 'Analysis' },
+    { href: '/dividends',    label: t('nav.dividends'), icon: CalendarDays,    group: 'Analysis' },
+    { href: '/operations',   label: t('nav.operations'),icon: ArrowLeftRight,  group: 'Analysis' },
+    { href: '/strategy',     label: t('nav.strategy'),  icon: Settings,        group: 'Config' },
+    { href: '/history',      label: t('nav.history'),   icon: History,         group: 'Config' },
+    { href: '/settings',     label: t('nav.settings'),  icon: UserCog,         group: 'Config' },
+  ];
   const [menuOpen, setMenuOpen] = useState(false);
 
   // Close menu on route change

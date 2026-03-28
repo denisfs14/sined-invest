@@ -3,111 +3,101 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase/client';
 
+// ─── Import all translation files statically ──────────────────────────────────
+// Dynamic import with variable paths fails in Next.js static export.
+// We import all locales at build time — tree-shaking keeps the bundle small.
+import en    from '@/messages/en.json';
+import ptBR  from '@/messages/pt-BR.json';
+import es    from '@/messages/es.json';
+
 // ─── Types ───────────────────────────────────────────────────────────────────
 export type Locale = 'en' | 'pt-BR' | 'es';
 
-type Translations = Record<string, Record<string, string>>;
+type DeepRecord = { [key: string]: string | DeepRecord };
 
 interface I18nContextValue {
   locale:    Locale;
-  setLocale: (l: Locale) => Promise<void>;
+  setLocale: (l: Locale) => void;
   t:         (key: string, vars?: Record<string, string | number>) => string;
 }
 
-// ─── Supported locales ───────────────────────────────────────────────────────
-export const LOCALES: Locale[] = ['en', 'pt-BR', 'es'];
-const DEFAULT_LOCALE: Locale = 'en';
-const STORAGE_KEY = 'sined_locale';
+// ─── All messages bundled synchronously ──────────────────────────────────────
+const ALL_MESSAGES: Record<Locale, DeepRecord> = {
+  'en':    en    as unknown as DeepRecord,
+  'pt-BR': ptBR  as unknown as DeepRecord,
+  'es':    es    as unknown as DeepRecord,
+};
 
-// ─── Context ─────────────────────────────────────────────────────────────────
+export const LOCALES: Locale[] = ['en', 'pt-BR', 'es'];
+const DEFAULT_LOCALE: Locale   = 'en';
+const STORAGE_KEY              = 'sined_locale';
+
+// ─── Context default ──────────────────────────────────────────────────────────
 const I18nContext = createContext<I18nContextValue>({
   locale:    DEFAULT_LOCALE,
-  setLocale: async () => {},
+  setLocale: () => {},
   t:         (key) => key,
 });
 
-// ─── Load translations ────────────────────────────────────────────────────────
-async function loadMessages(locale: Locale): Promise<Translations> {
-  try {
-    const mod = await import(`@/messages/${locale}.json`);
-    return mod.default as Translations;
-  } catch {
-    // Fallback to English
-    const mod = await import('@/messages/en.json');
-    return mod.default as Translations;
-  }
-}
-
-// ─── Resolve saved locale ────────────────────────────────────────────────────
+// ─── Resolve locale from localStorage ────────────────────────────────────────
 function getSavedLocale(): Locale {
   if (typeof window === 'undefined') return DEFAULT_LOCALE;
-  const saved = localStorage.getItem(STORAGE_KEY);
-  if (saved && LOCALES.includes(saved as Locale)) return saved as Locale;
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved && LOCALES.includes(saved as Locale)) return saved as Locale;
+  } catch {}
   return DEFAULT_LOCALE;
+}
+
+// ─── Translation resolver ────────────────────────────────────────────────────
+function resolve(messages: DeepRecord, key: string, vars?: Record<string, string | number>): string {
+  const parts = key.split('.');
+  let node: string | DeepRecord = messages;
+  for (const part of parts) {
+    if (typeof node !== 'object' || node === null) return key;
+    node = (node as DeepRecord)[part];
+    if (node === undefined) return key;
+  }
+  if (typeof node !== 'string') return key;
+  if (!vars) return node;
+  return node.replace(/\{(\w+)\}/g, (_, k) => String(vars[k] ?? `{${k}}`));
 }
 
 // ─── Provider ─────────────────────────────────────────────────────────────────
 export function I18nProvider({ children }: { children: React.ReactNode }) {
-  const [locale,   setLocaleState]  = useState<Locale>(DEFAULT_LOCALE);
-  const [messages, setMessages]     = useState<Translations>({});
-  const [ready,    setReady]        = useState(false);
+  const [locale, setLocaleState] = useState<Locale>(DEFAULT_LOCALE);
 
-  // Load locale on mount
+  // Hydrate from localStorage on mount
   useEffect(() => {
     const saved = getSavedLocale();
-    loadMessages(saved).then(msgs => {
-      setLocaleState(saved);
-      setMessages(msgs);
-      setReady(true);
-    });
+    if (saved !== locale) setLocaleState(saved);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Also try to read from Supabase user metadata
+  // Also read from Supabase user metadata (overrides localStorage if set)
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
-      const userLang = user?.user_metadata?.language as Locale | undefined;
-      if (userLang && LOCALES.includes(userLang) && userLang !== locale) {
-        loadMessages(userLang).then(msgs => {
-          setLocaleState(userLang);
-          setMessages(msgs);
-          try { localStorage.setItem(STORAGE_KEY, userLang); } catch {}
-        });
+      const lang = user?.user_metadata?.language as Locale | undefined;
+      if (lang && LOCALES.includes(lang)) {
+        setLocaleState(lang);
+        try { localStorage.setItem(STORAGE_KEY, lang); } catch {}
       }
     });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const setLocale = useCallback(async (newLocale: Locale) => {
-    const msgs = await loadMessages(newLocale);
+  const setLocale = useCallback((newLocale: Locale) => {
     setLocaleState(newLocale);
-    setMessages(msgs);
-    // Persist to localStorage (immediate)
     try { localStorage.setItem(STORAGE_KEY, newLocale); } catch {}
-    // Persist to Supabase user metadata (async, best-effort)
+    // Best-effort persist to Supabase
     supabase.auth.updateUser({ data: { language: newLocale } }).catch(() => {});
   }, []);
 
-  // Translation function
+  const messages = ALL_MESSAGES[locale] ?? ALL_MESSAGES[DEFAULT_LOCALE];
+
   const t = useCallback((key: string, vars?: Record<string, string | number>): string => {
-    const parts = key.split('.');
-    let value: unknown = messages;
-    for (const part of parts) {
-      if (typeof value === 'object' && value !== null) {
-        value = (value as Record<string, unknown>)[part];
-      } else {
-        return key; // key not found, return raw key
-      }
-    }
-    if (typeof value !== 'string') return key;
-
-    // Variable interpolation: {varName} → value
-    if (vars) {
-      return value.replace(/\{(\w+)\}/g, (_, k) => String(vars[k] ?? `{${k}}`));
-    }
-    return value;
+    return resolve(messages, key, vars);
   }, [messages]);
-
-  if (!ready) return null; // brief flash prevention
 
   return (
     <I18nContext.Provider value={{ locale, setLocale, t }}>
@@ -116,7 +106,6 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
-// ─── Hook ─────────────────────────────────────────────────────────────────────
 export function useT() {
   return useContext(I18nContext);
 }
