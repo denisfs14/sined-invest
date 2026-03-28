@@ -659,6 +659,10 @@
     "success_cta": "Ir al Dashboard",
     "error_title": "Algo salió mal",
     "error_desc": "Si fuiste cobrado, tu plan se activará pronto. Revisa tu email para el recibo.",
-    "error_cta": "Volver al Dashboard"
+    "error_cta": "Volver al Dashboard",
+    "timeout_title": "Pago recibido — activando…",
+    "timeout_desc": "Tu pago fue confirmado, pero la activación de tu plan está tardando un poco más de lo normal.",
+    "timeout_note": "Tu cuenta se actualizará en unos minutos. Revisa tu email para el comprobante.",
+    "timeout_cta": "Volver a la app"
   }
 }

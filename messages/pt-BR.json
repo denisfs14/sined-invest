@@ -659,6 +659,10 @@
     "success_cta": "Ir ao Dashboard",
     "error_title": "Algo deu errado",
     "error_desc": "Se você foi cobrado, seu plano será ativado em breve pelo processador. Verifique seu e-mail para o recibo.",
-    "error_cta": "Voltar ao Dashboard"
+    "error_cta": "Voltar ao Dashboard",
+    "timeout_title": "Pagamento recebido — ativando…",
+    "timeout_desc": "Seu pagamento foi confirmado, mas a ativação do seu plano está demorando um pouco mais que o normal.",
+    "timeout_note": "Sua conta será atualizada em alguns minutos. Verifique seu e-mail para o comprovante.",
+    "timeout_cta": "Voltar ao app"
   }
 }

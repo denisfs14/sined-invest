@@ -6,7 +6,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { getStripe } from '@/lib/stripe/server';
-import { supabaseAdmin } from '@/lib/stripe/supabase-admin';
+import { getAdmin } from '@/lib/stripe/supabase-admin';
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
 
@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const { data: profile } = await supabaseAdmin
+    const { data: profile } = await getAdmin()
       .from('user_profiles')
       .select('stripe_customer_id')
       .eq('id', user.id)

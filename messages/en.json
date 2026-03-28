@@ -659,6 +659,10 @@
     "success_cta": "Go to Dashboard",
     "error_title": "Something went wrong",
     "error_desc": "If you were charged, your plan will be activated shortly by our payment processor. Check your email for a receipt.",
-    "error_cta": "Back to Dashboard"
+    "error_cta": "Back to Dashboard",
+    "timeout_title": "Payment received — activating…",
+    "timeout_desc": "Your payment was confirmed, but your plan activation is taking a bit longer than usual.",
+    "timeout_note": "Your account will be updated within a few minutes. Check your email for a receipt.",
+    "timeout_cta": "Back to app"
   }
 }
