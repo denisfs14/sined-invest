@@ -99,7 +99,7 @@ export default function PortfolioPage() {
         subtitle={`${assets.length} ativos · ${formatCurrency(totalValue)}`}
         action={
           <div style={{ display: 'flex', gap: '10px' }}>
-            <Button variant="secondary" size="sm" onClick={() => setShowImport(true)}>📥 Importar</Button>
+            <Button variant="secondary" size="sm" onClick={() => setShowImport(true)}>{`📥 ${t('portfolio.import_btn')}`}</Button>
             <Button variant="secondary" size="sm" onClick={async () => { notify('Sincronizando preços...'); await syncPricesNow(); notify('Preços atualizados! ✓'); }}>🔄 Atualizar Preços</Button>
             <Button variant="secondary" size="sm" onClick={() => setShowClass(true)}>+ Classe</Button>
             <Button variant="primary" size="sm" onClick={() => { setEditTarget(undefined); setShowAsset(true); }}>+ Ativo</Button>
@@ -155,8 +155,8 @@ export default function PortfolioPage() {
               description="Adicione seu primeiro ativo ou importe do Status Invest"
               action={
                 <div style={{ display: 'flex', gap: '10px' }}>
-                  <Button variant="secondary" onClick={() => setShowImport(true)}>📥 Importar</Button>
-                  <Button variant="primary" onClick={() => setShowAsset(true)}>+ Adicionar Ativo</Button>
+                  <Button variant="secondary" onClick={() => setShowImport(true)}>{`📥 ${t('portfolio.import_btn')}`}</Button>
+                  <Button variant="primary" onClick={() => setShowAsset(true)}>{`+ ${t('portfolio.add_asset')}`}</Button>
                 </div>
               }
             />

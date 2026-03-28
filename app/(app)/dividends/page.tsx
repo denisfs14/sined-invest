@@ -66,7 +66,7 @@ export default function DividendsPage() {
               } catch { notify('Erro ao buscar proventos'); }
               setSyncing(false);
             }}>
-              🔄 {syncing ? 'Buscando...' : 'Buscar Proventos'}
+              🔄 {syncing ? t('dividends.syncing_btn') : t('dividends.sync_btn')}
             </Button>
             <Button variant="primary" size="sm" onClick={() => { setEditTarget(undefined); setShowModal(true); }}>
               <Plus size={13} /> Registrar
@@ -78,9 +78,9 @@ export default function DividendsPage() {
 
         {/* Stats */}
         <div className='prov-stat-grid' style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', marginBottom: '24px' }}>
-          <StatCard label="Esperado este mês" value={formatCurrency(totalExpected)} accent={C.blue} />
-          <StatCard label="Recebido este mês"  value={formatCurrency(totalReceived)} color={C.green} accent={C.green} />
-          <StatCard label="Pendente este mês"  value={formatCurrency(totalPending)}  color={totalPending > 0 ? C.amber : C.green} accent={C.amber} />
+          <StatCard label={t('dividends.expected_month')} value={formatCurrency(totalExpected)} accent={C.blue} />
+          <StatCard label={t('dividends.received_month')}  value={formatCurrency(totalReceived)} color={C.green} accent={C.green} />
+          <StatCard label={t('dividends.pending_month')}  value={formatCurrency(totalPending)}  color={totalPending > 0 ? C.amber : C.green} accent={C.amber} />
         </div>
 
         {/* Timeline */}

@@ -84,8 +84,8 @@ export function Sidebar() {
         background: C.navy,
         display: 'flex', flexDirection: 'column',
         height: '100vh', position: 'sticky', top: 0,
-        overflowY: 'auto',
-      }} className="desktop-sidebar">
+        overflow: 'hidden',  /* prevent aside from scrolling; only nav scrolls */
+      }} className="desktop-sidebar">  {/* aside: flex column, no overflow here */}
 
         {/* Logo */}
         <div style={{ padding: '24px 18px 20px', borderBottom: '1px solid rgba(255,255,255,.07)' }}>
@@ -129,9 +129,9 @@ export function Sidebar() {
               {user?.email}
             </div>
           </div>
-          {/* Mode Toggle */}
-          <div style={{ padding: '12px 10px 8px', borderTop: '1px solid rgba(255,255,255,.06)', marginBottom: '4px' }}>
-            <ModeToggle />
+          {/* Mode Toggle — compact in sidebar to save vertical space */}
+          <div style={{ paddingTop: '8px', borderTop: '1px solid rgba(255,255,255,.06)', marginBottom: '6px' }}>
+            <ModeToggle compact />
           </div>
 
           {/* Upgrade CTA for free users */}
@@ -145,7 +145,7 @@ export function Sidebar() {
               }}>
                 <Star size={12} color="#c9a84c" fill="#c9a84c" />
                 <div>
-                  <div style={{ fontSize: '11px', fontWeight: '700', color: '#c9a84c' }}>Upgrade para Pro</div>
+                  <div style={{ fontSize: '11px', fontWeight: '700', color: '#c9a84c' }}>{t('nav.upgrade_pro')}</div>
                   <div style={{ fontSize: '10px', color: 'rgba(255,255,255,.3)' }}>R$ 29/mês</div>
                 </div>
               </div>
@@ -160,7 +160,7 @@ export function Sidebar() {
             onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,.06)'; (e.currentTarget as HTMLElement).style.color = C.white; }}
             onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,.4)'; }}
           >
-            <LogOut size={14} /> Sair
+            <LogOut size={14} /> {t('nav.logout')}
           </button>
         </div>
       </aside>
@@ -217,9 +217,9 @@ export function Sidebar() {
               <div style={{ fontSize: '13px', fontWeight: '600', color: C.white }}>{user?.email?.split('@')[0]}</div>
               <div style={{ fontSize: '11px', color: 'rgba(255,255,255,.4)' }}>{user?.email}</div>
             </div>
-            {/* Mode Toggle */}
-          <div style={{ padding: '12px 10px 8px', borderTop: '1px solid rgba(255,255,255,.06)', marginBottom: '4px' }}>
-            <ModeToggle />
+            {/* Mode Toggle — compact in sidebar to save vertical space */}
+          <div style={{ paddingTop: '8px', borderTop: '1px solid rgba(255,255,255,.06)', marginBottom: '6px' }}>
+            <ModeToggle compact />
           </div>
 
           {/* Upgrade CTA for free users */}
@@ -233,7 +233,7 @@ export function Sidebar() {
               }}>
                 <Star size={12} color="#c9a84c" fill="#c9a84c" />
                 <div>
-                  <div style={{ fontSize: '11px', fontWeight: '700', color: '#c9a84c' }}>Upgrade para Pro</div>
+                  <div style={{ fontSize: '11px', fontWeight: '700', color: '#c9a84c' }}>{t('nav.upgrade_pro')}</div>
                   <div style={{ fontSize: '10px', color: 'rgba(255,255,255,.3)' }}>R$ 29/mês</div>
                 </div>
               </div>
@@ -246,7 +246,7 @@ export function Sidebar() {
               color: 'rgba(255,255,255,.6)', fontSize: '13px',
               fontFamily: 'var(--font)', cursor: 'pointer',
             }}>
-              <LogOut size={16} /> Sair da conta
+              <LogOut size={16} /> {t('nav.logout')}
             </button>
           </div>
         </div>

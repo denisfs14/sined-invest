@@ -47,16 +47,16 @@ export default function DashboardPage() {
     // Guard: skip if already fetching or no assets
     if (isFetching.current || assets.length === 0) return;
     isFetching.current = true;
-    if (!silent) { setSyncing(true); setSyncMsg('Atualizando...'); }
+    if (!silent) { setSyncing(true); setSyncMsg(t('dashboard.sync_updating')); }
     try {
       const res = await syncPricesNow();
       lastSyncRef.current = new Date(); // ref update — no re-render
       if (!silent) {
-        setSyncMsg(`✓ ${res.updated} preços`);
+        setSyncMsg(t('dashboard.sync_updated', { count: res.updated }));
         setTimeout(() => setSyncMsg(''), 4000);
       }
     } catch {
-      if (!silent) setSyncMsg('Erro');
+      if (!silent) setSyncMsg(t('dashboard.sync_error'));
     } finally {
       isFetching.current = false;
       if (!silent) setSyncing(false);
@@ -172,11 +172,11 @@ export default function DashboardPage() {
   // ── What to do decision ────────────────────────────────────────────────────
   const decision = useMemo(() => {
     if (isEmpty) return null;
-    if (window.ready) return { type: 'aportar', label: 'Aportar agora', desc: window.total_received > 0 ? `${formatCurrency(window.total_received)} em proventos disponíveis` : 'Janela de aporte está aberta', urgent: true };
-    if (redAssets.length > 0) return { type: 'oportunidade', label: `${redAssets.length} ativo${redAssets.length !== 1 ? 's' : ''} vermelho${redAssets.length !== 1 ? 's' : ''}`, desc: 'Prioridade no próximo aporte — preço abaixo do PM', urgent: false };
-    if (upcomingDivs.length > 0) { const days = daysFromNow(upcomingDivs[0].payment_date); return { type: 'aguardar', label: `Aguardar ${days}d`, desc: `Próximo provento em ${formatDate(upcomingDivs[0].payment_date)}`, urgent: false }; }
-    return { type: 'ok', label: 'Carteira saudável', desc: 'Sem alertas. Continue aportando regularmente.', urgent: false };
-  }, [isEmpty, window, redAssets, upcomingDivs]);
+    if (window.ready) return { type: 'aportar', label: t('dashboard.decision_contribute'), desc: window.total_received > 0 ? `${formatCurrency(window.total_received)} ${t('dashboard.decision_dividends_avail')}` : t('dashboard.decision_window_open'), urgent: true };
+    if (redAssets.length > 0) return { type: 'oportunidade', label: redAssets.length === 1 ? t('dashboard.decision_red_assets', { count: redAssets.length }) : t('dashboard.decision_red_assets_pl', { count: redAssets.length }), desc: t('dashboard.decision_priority_pm'), urgent: false };
+    if (upcomingDivs.length > 0) { const days = daysFromNow(upcomingDivs[0].payment_date); return { type: 'aguardar', label: t('dashboard.decision_wait', { days }), desc: t('dashboard.decision_next_div', { date: formatDate(upcomingDivs[0].payment_date) }), urgent: false }; }
+    return { type: 'ok', label: t('dashboard.decision_healthy'), desc: t('dashboard.decision_no_alerts'), urgent: false };
+  }, [isEmpty, window, redAssets, upcomingDivs, t]);
 
   return (
     <>
@@ -223,7 +223,7 @@ export default function DashboardPage() {
                 <div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '4px' }}>
                     <span style={{ fontSize: '12px', fontWeight: '800', color: '#FDE68A', letterSpacing: '1px', textTransform: 'uppercase' }}>
-                      {nextExDiv.daysLeft === 0 ? 'Data ex-dividendo HOJE' : `Data ex-dividendo em ${nextExDiv.daysLeft} dia${nextExDiv.daysLeft > 1 ? 's' : ''}`}
+                      {nextExDiv.daysLeft === 0 ? t('dashboard.banner_urgency_today') : `Data ex-dividendo em ${nextExDiv.daysLeft} dia${nextExDiv.daysLeft > 1 ? 's' : ''}`}
                     </span>
                     <span style={{ background: 'rgba(253,230,138,.2)', border: '1px solid rgba(253,230,138,.4)', borderRadius: '20px', padding: '1px 8px', fontSize: '10px', fontWeight: '800', color: '#FDE68A' }}>
                       Urgente
@@ -248,13 +248,13 @@ export default function DashboardPage() {
             <div style={{ fontSize: '10px', fontWeight: '700', color: C.gold, letterSpacing: '2px', textTransform: 'uppercase', marginBottom: '12px' }}>🚀 Começando</div>
             <div style={{ fontSize: '22px', fontWeight: '800', color: C.white, marginBottom: '8px', letterSpacing: '-0.5px' }}>Bem-vindo ao SINED Invest</div>
             <div style={{ fontSize: '14px', color: 'rgba(255,255,255,.5)', marginBottom: '24px', lineHeight: '1.7', maxWidth: '500px' }}>
-              O motor de decisão que calcula <strong style={{ color: C.goldL }}>o que</strong>, <strong style={{ color: C.goldL }}>quanto</strong> e <strong style={{ color: C.goldL }}>quantas cotas</strong> comprar no próximo aporte.
+              {t('dashboard.welcome_desc', { what: t('dashboard.welcome_what'), how_much: t('dashboard.welcome_how_much'), how_many: t('dashboard.welcome_how_many') })}
             </div>
             <div className="onboard-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '12px', marginBottom: '24px' }}>
               {[
-                { n: '1', title: 'Importe sua carteira', desc: 'Importe seu xlsx do Status Invest ou adicione ativos manualmente.', href: '/portfolio' },
-                { n: '2', title: 'Configure a estratégia', desc: 'Defina % por classe de ativo e quantos comprar em cada.', href: '/strategy' },
-                { n: '3', title: 'Calcule o aporte', desc: 'Informe o valor disponível e receba o que comprar.', href: '/contribution' },
+                { n: '1', title: t('dashboard.onboard_import_title'), desc: t('dashboard.onboard_import_desc'), href: '/portfolio' },
+                { n: '2', title: t('dashboard.onboard_strategy_title'), desc: 'Defina % por classe de ativo e quantos comprar em cada.', href: '/strategy' },
+                { n: '3', title: t('dashboard.onboard_calc_title'), desc: t('dashboard.onboard_calc_desc'), href: '/contribution' },
               ].map(({ n, title, desc, href }) => (
                 <Link key={n} href={href} style={{ textDecoration: 'none' }}>
                   <div style={{ background: 'rgba(255,255,255,.06)', borderRadius: '14px', padding: '18px', border: '1px solid rgba(255,255,255,.08)', height: '100%' }}>
@@ -274,7 +274,7 @@ export default function DashboardPage() {
 
         {/* ── UPGRADE BANNER ──────────────────────────────────────────────────── */}
         {!isEmpty && planData.isDemo && (
-          <UpgradeBanner message="Simple Mode — Decisões rápidas e assertivas" feature="recommendation:full" targetPlan="simple" />
+          <UpgradeBanner message={t("dashboard.subtitle_simple")} feature="recommendation:full" targetPlan="simple" />
         )}
 
         {/* ── EX-DIV NOTICE (4–14 days) — below emergency zone ────────────────── */}
@@ -401,14 +401,14 @@ export default function DashboardPage() {
               {/* Inline stats strip */}
               <div style={{ display: 'flex', gap: '28px', marginTop: '24px', paddingTop: '20px', borderTop: '1px solid rgba(255,255,255,.07)', flexWrap: 'wrap' }}>
                 {[
-                  { label: 'Patrimônio', value: formatCurrency(totalValue), color: C.white },
-                  { label: 'Proventos do mês', value: formatCurrency(thisMonthDivs), color: thisMonthDivs > 0 ? C.green : 'rgba(255,255,255,.35)' },
-                  { label: 'Vermelhos', value: String(redAssets.length), color: redAssets.length > 0 ? '#FCA5A5' : C.green },
+                  { label: t('dashboard.strip_patrimony'), value: formatCurrency(totalValue), color: C.white },
+                  { label: t('dashboard.strip_dividends_month'), value: formatCurrency(thisMonthDivs), color: thisMonthDivs > 0 ? C.green : 'rgba(255,255,255,.35)' },
+                  { label: t('dashboard.strip_red'), value: String(redAssets.length), color: redAssets.length > 0 ? '#FCA5A5' : C.green },
                   ...(nextExDiv && nextExDiv.daysLeft <= 7
                     ? [{ label: `Ex-div em ${nextExDiv.daysLeft}d`, value: formatCurrency(nextExDiv.ev.expected_amount), color: '#FDE68A' }]
                     : window.ready
-                    ? [{ label: 'Janela', value: '✦ Aberta', color: C.goldL }]
-                    : [{ label: 'Próx. aporte', value: window.total_pending > 0 ? `Aguardando ${formatCurrency(window.total_pending)}` : '—', color: 'rgba(255,255,255,.35)' }]
+                    ? [{ label: t('dashboard.strip_window'), value: t('dashboard.strip_window_open'), color: C.goldL }]
+                    : [{ label: t('dashboard.strip_next_contribution'), value: window.total_pending > 0 ? `Aguardando ${formatCurrency(window.total_pending)}` : '—', color: 'rgba(255,255,255,.35)' }]
                   ),
                 ].map(({ label, value, color }) => (
                   <div key={label}>
@@ -433,12 +433,12 @@ export default function DashboardPage() {
                     <span style={{ fontSize: '10px', fontWeight: '700', color: redAssets.length > 0 ? C.red : C.gray400, textTransform: 'uppercase', letterSpacing: '1px' }}>{t('dashboard.opportunity')}</span>
                   </div>
                   <div style={{ fontSize: '20px', fontWeight: '800', color: redAssets.length > 0 ? C.red : C.gray400, marginBottom: '6px' }}>
-                    {redAssets.length > 0 ? `${redAssets.length} vermelho${redAssets.length !== 1 ? 's' : ''}` : 'Nenhum'}
+                    {redAssets.length > 0 ? redAssets.length === 1 ? t('dashboard.decision_red_assets', { count: redAssets.length }) : t('dashboard.decision_red_assets_pl', { count: redAssets.length }) : 'Nenhum'}
                   </div>
                   <div style={{ fontSize: '12px', color: C.gray600, lineHeight: '1.5', marginBottom: '6px' }}>
                     {redAssets.length > 0
                       ? `Comprar agora aumenta posição com desconto sobre o PM`
-                      : 'Todos os ativos estão acima do preço médio'}
+                      : t('dashboard.card_all_above_pm')}
                   </div>
                   {redAssets.length > 0 && (
                     <div style={{ fontSize: '11px', fontWeight: '600', color: C.red }}>
@@ -459,14 +459,14 @@ export default function DashboardPage() {
                     <span style={{ fontSize: '10px', fontWeight: '700', color: window.ready ? C.goldL : C.gray400, textTransform: 'uppercase', letterSpacing: '1px' }}>{t('dashboard.buy_window')}</span>
                   </div>
                   <div style={{ fontSize: '20px', fontWeight: '800', color: window.ready ? C.white : C.gray400, marginBottom: '6px' }}>
-                    {window.ready ? '✦ Aberta' : 'Aguardando'}
+                    {window.ready ? t('dashboard.strip_window_open') : 'Aguardando'}
                   </div>
                   <div style={{ fontSize: '12px', color: window.ready ? 'rgba(255,255,255,.5)' : C.gray500, lineHeight: '1.5', marginBottom: '6px' }}>
                     {window.ready
                       ? `${formatCurrency(window.total_received)} recebidos — aportar agora maximiza o capital disponível`
                       : window.total_pending > 0
                       ? `Aguardando ${formatCurrency(window.total_pending)} em proventos`
-                      : 'Registre proventos para ativar a janela'}
+                      : t('dashboard.card_register_proventos')}
                   </div>
                   {window.ready && (
                     <div style={{ fontSize: '11px', fontWeight: '600', color: C.goldL }}>
@@ -553,9 +553,9 @@ export default function DashboardPage() {
                 </div>
               </Card>
             )) : (<>
-              <StatCard label="Patrimônio Total" value={formatCurrency(totalValue)} sub={`${assets.length} ativo${assets.length !== 1 ? 's' : ''}`} accent={C.gold} icon={<TrendingUp size={15} />} />
-              <StatCard label="Proventos do Mês" value={formatCurrency(thisMonthDivs)} sub={`${dividends.filter(d => { const dt = new Date(d.payment_date); const n = new Date(); return dt.getMonth() === n.getMonth() && dt.getFullYear() === n.getFullYear(); }).length} evento${dividends.length !== 1 ? 's' : ''}`} color={thisMonthDivs > 0 ? C.green : undefined} accent={C.green} icon={<CalendarDays size={15} />} />
-              <StatCard label="Ativos Vermelhos" value={String(redAssets.length)} sub="Prioridade no aporte" color={redAssets.length > 0 ? C.red : C.green} accent={redAssets.length > 0 ? C.red : C.green} icon={<AlertCircle size={15} />} />
+              <StatCard label={t('dashboard.kpi_patrimony')} value={formatCurrency(totalValue)} sub={`${assets.length} ativo${assets.length !== 1 ? 's' : ''}`} accent={C.gold} icon={<TrendingUp size={15} />} />
+              <StatCard label={t('dashboard.kpi_dividends_month')} value={formatCurrency(thisMonthDivs)} sub={`${dividends.filter(d => { const dt = new Date(d.payment_date); const n = new Date(); return dt.getMonth() === n.getMonth() && dt.getFullYear() === n.getFullYear(); }).length} evento${dividends.length !== 1 ? 's' : ''}`} color={thisMonthDivs > 0 ? C.green : undefined} accent={C.green} icon={<CalendarDays size={15} />} />
+              <StatCard label={t('dashboard.kpi_red_assets')} value={String(redAssets.length)} sub={t('dashboard.kpi_priority_note')} color={redAssets.length > 0 ? C.red : C.green} accent={redAssets.length > 0 ? C.red : C.green} icon={<AlertCircle size={15} />} />
               <StatCard label={totalPL >= 0 ? 'Resultado Total' : 'Resultado Total'} value={`${totalPL >= 0 ? '+' : ''}${formatCurrency(totalPL)}`} sub={totalCost > 0 ? `${((totalPL / totalCost) * 100).toFixed(1)}% sobre custo` : '—'} color={totalPL >= 0 ? C.green : C.red} accent={totalPL >= 0 ? C.green : C.red} icon={<TrendingUp size={15} />} />
             </>)}
           </div>
@@ -606,10 +606,10 @@ export default function DashboardPage() {
             <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px', marginBottom: window.total_expected > 0 ? '16px' : '0' }}>
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: '10px', fontWeight: '700', color: C.gold, letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: '6px' }}>
-                  {window.ready ? '✦ Janela de Aporte Aberta' : '⏳ Aguardando Proventos'}
+                  {window.ready ? t('dashboard.window_open_label') : t('dashboard.window_waiting_label')}
                 </div>
                 <div style={{ fontSize: '16px', fontWeight: '800', color: C.white, letterSpacing: '-0.3px', lineHeight: '1.3' }}>
-                  {window.ready ? 'Momento ideal para aportar' : dividends.length === 0 ? 'Configure proventos para ativar a janela' : `Aguardando ${formatCurrency(window.total_pending)}`}
+                  {window.ready ? t('dashboard.window_ideal') : dividends.length === 0 ? t('dashboard.window_configure') : `Aguardando ${formatCurrency(window.total_pending)}`}
                 </div>
                 {window.last_payment_date && (<div style={{ fontSize: '11px', color: 'rgba(255,255,255,.35)', marginTop: '4px' }}>Último pagamento: {formatDate(window.last_payment_date)}</div>)}
               </div>
@@ -679,7 +679,7 @@ export default function DashboardPage() {
                       </div>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                      <Badge color={days <= 7 ? 'amber' : 'blue'}>{days === 0 ? 'Hoje' : `em ${days}d`}</Badge>
+                      <Badge color={days <= 7 ? 'amber' : 'blue'}>{days === 0 ? t('dashboard.today_label') : `em ${days}d`}</Badge>
                       <div style={{ fontFamily: 'var(--mono)', fontWeight: '700', fontSize: '14px', color: C.green }}>{formatCurrency(ev.expected_amount)}</div>
                     </div>
                   </div>
@@ -697,8 +697,8 @@ export default function DashboardPage() {
             </CardHeader>
             <CardBody>
               {!lastSim || !lastSim.items || lastSim.items.length === 0 ? (
-                <EmptyState icon="💡" title="Nenhuma recomendação ainda" description="Calcule seu primeiro aporte para ver as recomendações aqui"
-                  action={<Link href="/contribution"><Button variant="primary" size="sm"><Zap size={13} /> Calcular Aporte</Button></Link>} />
+                <EmptyState icon="💡" title={t('dashboard.no_rec_title')} description={t('dashboard.no_rec_desc')}
+                  action={<Link href="/contribution"><Button variant="primary" size="sm"><Zap size={13} /> {t('dashboard.calculate_btn')}</Button></Link>} />
               ) : (<>
                 <div style={{ fontSize: '12px', color: C.gray400, marginBottom: '16px' }}>
                   {formatDate(lastSim.created_at)} · {lastSim.items.length} ativo{lastSim.items.length !== 1 ? 's' : ''} · {formatCurrency(lastSim.total_amount)}
@@ -731,7 +731,7 @@ export default function DashboardPage() {
                 })}
                 {lastSim.items.length > (mode === 'simple' ? 3 : 5) && (
                   <div style={{ padding: '10px 0', fontSize: '12px', color: C.gray400, textAlign: 'center' }}>
-                    +{lastSim.items.length - (mode === 'simple' ? 3 : 5)} mais · <Link href="/contribution" style={{ color: C.blue, textDecoration: 'none' }}>Recalcular aporte</Link>
+                    {t('dashboard.more_items', { count: lastSim.items.length - (mode === 'simple' ? 3 : 5) })} · <Link href="/contribution" style={{ color: C.blue, textDecoration: 'none' }}>Recalcular aporte</Link>
                   </div>
                 )}
                 {lastSim.leftover > 0 && (
@@ -778,6 +778,7 @@ function AdvancedModeLockTeaser({ totalValue, thisMonthDivs, classes, assets, ho
   holdingsMap: Record<string, { quantity: number; avg_price: number }>;
   totalPL: number;
 }) {
+  const { t } = useT();
   // Compute real allocation data to show blurred
   const topClass = useMemo(() => {
     let best = { name: '—', pct: 0 };
@@ -794,9 +795,9 @@ function AdvancedModeLockTeaser({ totalValue, thisMonthDivs, classes, assets, ho
   const yieldPct        = totalValue > 0 ? (thisMonthDivs / totalValue) * 100 : 0;
 
   const items = [
-    { label: 'Maior Classe', val: topClass.pct > 0 ? `${topClass.name} · ${topClass.pct.toFixed(1)}%` : 'Configure classes' },
-    { label: 'Renda Projetada 12m', val: projectedAnnual > 0 ? formatCurrency(projectedAnnual) : 'R$ ?,???' },
-    { label: 'Yield Médio Mensal', val: yieldPct > 0 ? `${yieldPct.toFixed(2)}% / mês` : '??.??%' },
+    { label: t('dashboard.lock_top_class'), val: topClass.pct > 0 ? `${topClass.name} · ${topClass.pct.toFixed(1)}%` : 'Configure classes' },
+    { label: t('dashboard.lock_income_12m'), val: projectedAnnual > 0 ? formatCurrency(projectedAnnual) : 'R$ ?,???' },
+    { label: t('dashboard.lock_yield_avg'), val: yieldPct > 0 ? `${yieldPct.toFixed(2)}% / mês` : '??.??%' },
   ];
 
   return (
@@ -842,9 +843,9 @@ function AdvancedModeLockTeaser({ totalValue, thisMonthDivs, classes, assets, ho
             Desbloqueie a análise completa
           </div>
           <div style={{ fontSize: '13px', color: C.gray500, lineHeight: '1.7', marginBottom: '20px' }}>
-            <strong>Renda projetada · Yield real · P&L por ativo</strong>
+            <strong>{t('dashboard.lock_features')}</strong>
             <br />
-            Alocação por classe · Histórico ilimitado · Exportação
+            {t('dashboard.lock_features2')}
           </div>
           <Link href="/upgrade?ref=advanced_mode&plan=ADVANCED">
             <Button variant="gold" size="sm" style={{ fontSize: '13px', padding: '11px 24px', boxShadow: `0 4px 20px ${C.gold}44` }}>
@@ -863,6 +864,7 @@ function RedAssetsCard({ redAssets, holdingsMap, classes, totalValue }: {
   redAssets: Asset[]; holdingsMap: Record<string, { quantity: number; avg_price: number }>;
   classes: AssetClass[]; totalValue: number;
 }) {
+  const { t } = useT();
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
 
   const groups = useMemo(() => {
@@ -878,7 +880,7 @@ function RedAssetsCard({ redAssets, holdingsMap, classes, totalValue }: {
       <CardHeader action={<Badge color="red">{redAssets.length} ativo{redAssets.length !== 1 ? 's' : ''}</Badge>}>🔴 Ativos Vermelhos</CardHeader>
       <CardBody style={{ padding: '0 24px 16px' }}>
         {redAssets.length === 0
-          ? <EmptyState icon="✅" title="Tudo em ordem" description="Nenhum ativo abaixo do preço médio" />
+          ? <EmptyState icon="✅" title={`${t('dashboard.everything_ok')} ${t('dashboard.all_healthy')}`} description={t('dashboard.no_assets_below_pm')} />
           : groups.map(group => {
             const isOpen = !collapsed[group.id];
             const gVal = group.assets.reduce((s, a) => s + (holdingsMap[a.id]?.quantity ?? 0) * a.current_price, 0);

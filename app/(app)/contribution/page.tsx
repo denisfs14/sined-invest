@@ -108,7 +108,7 @@ export default function ContributionPage() {
         subtitle={t('contribution.subtitle')}
         action={result && result.items.length > 0 && (
           <Button variant="secondary" size="sm" onClick={save}>
-            <Save size={13} /> {t('contribution.save_simulation')}
+            <Save size={13} /> {t('contribution.save_sim_btn')}
           </Button>
         )}
       />
@@ -128,7 +128,7 @@ export default function ContributionPage() {
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '3px' }}>
                   <div style={{ fontSize: '13px', fontWeight: '800', color: window.ready ? C.goldL : C.amber }}>
-                    {window.ready ? 'Momento ideal para aportar' : 'Aguardando provento para abrir janela'}
+                    {window.ready ? t('contribution.window_ideal') : t('contribution.window_waiting')}
                   </div>
                   {window.ready && (
                     <div style={{ background: `${C.green}22`, border: `1px solid ${C.green}44`, borderRadius: '20px', padding: '1px 8px', fontSize: '9px', fontWeight: '800', color: C.green, letterSpacing: '1px', textTransform: 'uppercase' }}>Timing Ideal</div>
@@ -144,7 +144,7 @@ export default function ContributionPage() {
               </div>
             </div>
             <Badge color={window.ready ? 'green' : 'amber'}>
-              {window.ready ? '✓ Pronto para aportar' : `Pendente: ${formatCurrency(window.total_pending)}`}
+              {window.ready ? t('contribution.window_ready') : `Pendente: ${formatCurrency(window.total_pending)}`}
             </Badge>
           </div>
         )}
@@ -258,7 +258,7 @@ export default function ContributionPage() {
               {/* Global params */}
               <div style={{ display: 'flex', gap: '28px', flexWrap: 'wrap' }}>
                 {[
-                  { label: 'Total disponível', value: formatCurrency(totalAvailable), color: C.white },
+                  { label: t('contribution.total_available'), value: formatCurrency(totalAvailable), color: C.white },
                   { label: 'Limite máximo',    value: `${strategy.max_percentage}%`, color: '#93C5FD' },
                   { label: 'Prioridade',       value: strategy.prioritize_red ? 'Vermelhos' : 'Menor %', color: strategy.prioritize_red ? '#FCA5A5' : '#93C5FD' },
                   { label: 'Modo',             value: classes.some(c => (c.contribution_percentage || 0) > 0) ? 'Por Classe' : 'Global', color: '#86EFAC' },

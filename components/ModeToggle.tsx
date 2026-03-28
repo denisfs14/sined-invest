@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { Zap, BarChart2, Lock } from 'lucide-react';
 import { useApp } from '@/lib/app-context';
 import { getUpgradeUrl } from '@/lib/plans';
+import { useT } from '@/lib/i18n';
 import { C } from '@/components/ui';
 
 interface ModeToggleProps {
@@ -13,6 +14,7 @@ interface ModeToggleProps {
 export function ModeToggle({ compact = false }: ModeToggleProps) {
   const { mode, setMode, planData } = useApp();
   const router = useRouter();
+  const { t } = useT();
 
   function handleAdvancedClick() {
     if (planData.canAdv) {
@@ -57,7 +59,7 @@ export function ModeToggle({ compact = false }: ModeToggleProps) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
       <div style={{ fontSize: '10px', fontWeight: '700', color: 'rgba(255,255,255,.3)', letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: '4px' }}>
-        Modo de visualização
+        {t('dashboard.mode_label') }
       </div>
       <div style={{
         display: 'flex', gap: '6px',
@@ -67,14 +69,14 @@ export function ModeToggle({ compact = false }: ModeToggleProps) {
       }}>
         <ToggleBtn
           label="Simple Mode"
-          sublabel="Decisões rápidas"
+          sublabel={t('dashboard.mode_simple_desc')}
           icon={<Zap size={14} />}
           active={mode === 'simple'}
           onClick={handleSimpleClick}
         />
         <ToggleBtn
           label="Advanced Mode"
-          sublabel={planData.canAdv ? 'Análise completa' : 'Upgrade necessário'}
+          sublabel={planData.canAdv ? t('dashboard.mode_adv_desc') : t('dashboard.mode_upgrade_needed')}
           icon={planData.canAdv ? <BarChart2 size={14} /> : <Lock size={14} />}
           active={mode === 'advanced'}
           onClick={handleAdvancedClick}
