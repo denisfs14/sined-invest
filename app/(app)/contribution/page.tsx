@@ -3,6 +3,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { Zap, Save, Info } from 'lucide-react';
 import { useApp } from '@/lib/app-context';
+import { useT } from '@/lib/i18n';
 import { calculatePurchaseRecommendation } from '@/lib/calculations/recommendation-engine';
 import { calculateContributionWindow } from '@/lib/calculations/dividend-calendar';
 import { RecommendationResult } from '@/types';
@@ -14,7 +15,8 @@ import {
 import { formatCurrency, formatDate } from '@/utils/format';
 
 export default function ContributionPage() {
-  const { assets, classes, holdingsMap, strategy, portfolio, dividends, saveSimulation, mode, planData } = useApp();
+  const { t } = useT();
+    const { assets, classes, holdingsMap, strategy, portfolio, dividends, saveSimulation, mode, planData } = useApp();
 
   const [amount, setAmount]     = useState(() => {
     try { return sessionStorage.getItem('sined_aporte_amount') || ''; } catch { return ''; }
@@ -70,8 +72,8 @@ export default function ContributionPage() {
   }
 
   function run() {
-    if (totalAvailable <= 0) return notify('Informe um valor válido', 'error');
-    if (assets.length === 0) return notify('Adicione ativos à carteira primeiro', 'error');
+    if (totalAvailable <= 0) return notify(t('contribution.invalid_amount'), 'error');
+    if (assets.length === 0) return notify(t('contribution.no_assets'), 'error');
     setRunning(true);
     setTimeout(() => {
       const res = calculatePurchaseRecommendation({ assets, classes, holdingsMap, totalAvailable, strategy });
@@ -102,11 +104,11 @@ export default function ContributionPage() {
   return (
     <>
       <PageHeader
-        title="Aportar"
-        subtitle="Motor de decisão · Know what to buy next"
+        title={t('contribution.title')}
+        subtitle={t('contribution.subtitle')}
         action={result && result.items.length > 0 && (
           <Button variant="secondary" size="sm" onClick={save}>
-            <Save size={13} /> Salvar Simulação
+            <Save size={13} /> {t('contribution.save_simulation')}
           </Button>
         )}
       />
@@ -157,13 +159,13 @@ export default function ContributionPage() {
         }}>
           <div style={{ marginBottom: '8px' }}>
             <div style={{ fontSize: '10px', fontWeight: '700', color: C.gold, letterSpacing: '2px', textTransform: 'uppercase', marginBottom: '6px' }}>
-              ✦ Motor de Decisão
+              {t('contribution.engine_label')}
             </div>
             <div style={{ fontSize: '22px', fontWeight: '800', color: C.white, letterSpacing: '-0.5px' }}>
-              Quanto você quer investir?
+              {t('contribution.what_to_buy')}
             </div>
             <div style={{ fontSize: '13px', color: 'rgba(255,255,255,.35)', marginTop: '4px' }}>
-              O sistema calcula o que, quanto e quantas cotas comprar
+              {t('contribution.enter_value')}
             </div>
           </div>
 
@@ -171,7 +173,7 @@ export default function ContributionPage() {
             {/* Aporte Mensal */}
             <div>
               <div style={{ fontSize: '10px', fontWeight: '700', color: 'rgba(255,255,255,.3)', letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: '9px' }}>
-                💵 Aporte Mensal
+                {t('contribution.monthly_contribution')}
               </div>
               <input
                 type="number" min="0" step="0.01" placeholder="5000.00"
@@ -187,7 +189,7 @@ export default function ContributionPage() {
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '9px' }}>
                 <div style={{ fontSize: '10px', fontWeight: '700', color: 'rgba(255,255,255,.3)', letterSpacing: '1.5px', textTransform: 'uppercase' }}>
-                  📈 Proventos / Extras
+                  {t('contribution.dividends_extras')}
                 </div>
                 {monthlyDivsReceived > 0 && (
                   <div style={{
@@ -246,7 +248,7 @@ export default function ContributionPage() {
               }}
             >
               <Zap size={16} />
-              {running ? 'Calculando…' : 'Calcular'}
+              {running ? t('contribution.calculating') : t('contribution.calculate_btn')}
             </button>
           </div>
 

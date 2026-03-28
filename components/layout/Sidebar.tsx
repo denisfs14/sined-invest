@@ -106,12 +106,12 @@ export function Sidebar() {
 
         {/* Nav groups */}
         <nav style={{ flex: 1, padding: '14px 10px', overflowY: 'auto' }}>
-          {['Análise', 'Config'].map(group => {
+          {['Analysis', 'Config'].map(group => {
             const items = NAV.filter(n => n.group === group);
             return (
               <div key={group} style={{ marginBottom: '20px' }}>
                 <div style={{ fontSize: '9px', fontWeight: '700', color: 'rgba(255,255,255,.25)', letterSpacing: '2px', textTransform: 'uppercase', padding: '0 14px', marginBottom: '6px' }}>
-                  {group === 'Config' ? 'Configurações' : group}
+                  {group === 'Config' ? 'Config' : 'Analysis'}
                 </div>
                 {items.map(item => <NavItem key={item.href} href={item.href} label={item.label} Icon={item.icon} />)}
               </div>
@@ -198,12 +198,12 @@ export function Sidebar() {
           display: 'none',
           padding: '16px 12px',
         }}>
-          {['Análise', 'Config'].map(group => {
+          {['Analysis', 'Config'].map(group => {
             const items = NAV.filter(n => n.group === group);
             return (
               <div key={group} style={{ marginBottom: '20px' }}>
                 <div style={{ fontSize: '10px', fontWeight: '700', color: 'rgba(255,255,255,.3)', letterSpacing: '2px', textTransform: 'uppercase', padding: '0 14px', marginBottom: '8px' }}>
-                  {group === 'Config' ? 'Configurações' : group}
+                  {group === 'Config' ? 'Config' : 'Analysis'}
                 </div>
                 {items.map(item => (
                   <NavItem key={item.href} href={item.href} label={item.label} Icon={item.icon}

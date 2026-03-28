@@ -2,23 +2,20 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 
 const PUBLIC_ROUTES  = ['/auth/login', '/auth/signup', '/auth/reset-password', '/auth/verify'];
+const ADMIN_ROUTES   = ['/admin'];
 const PROTECTED_ROOT = '/dashboard';
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Allow public assets and API routes
-  if (
-    pathname.startsWith('/_next') ||
-    pathname.startsWith('/api') ||
-    pathname.includes('.')
-  ) return NextResponse.next();
+  if (pathname.startsWith('/_next') || pathname.startsWith('/api') || pathname.includes('.'))
+    return NextResponse.next();
 
-  const isPublicRoute    = PUBLIC_ROUTES.some(r => pathname.startsWith(r));
-  const isRootPath       = pathname === '/';
-  let   response         = NextResponse.next();
+  const isPublicRoute = PUBLIC_ROUTES.some(r => pathname.startsWith(r));
+  const isAdminRoute  = ADMIN_ROUTES.some(r => pathname.startsWith(r));
+  const isRootPath    = pathname === '/';
+  let response        = NextResponse.next();
 
-  // Create Supabase server client
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -38,28 +35,31 @@ export async function middleware(request: NextRequest) {
 
   const { data: { user } } = await supabase.auth.getUser();
 
-  // Root → redirect based on auth state
-  if (isRootPath) {
-    return NextResponse.redirect(
-      new URL(user ? PROTECTED_ROOT : '/auth/login', request.url)
-    );
-  }
+  if (isRootPath)
+    return NextResponse.redirect(new URL(user ? PROTECTED_ROOT : '/auth/login', request.url));
 
-  // Unauthenticated trying to access protected route
   if (!isPublicRoute && !user) {
-    const loginUrl = new URL('/auth/login', request.url);
-    loginUrl.searchParams.set('redirect', pathname);
-    return NextResponse.redirect(loginUrl);
+    const url = new URL('/auth/login', request.url);
+    url.searchParams.set('redirect', pathname);
+    return NextResponse.redirect(url);
   }
 
-  // Authenticated trying to access auth pages
-  if (isPublicRoute && user && pathname !== '/auth/verify') {
+  if (isPublicRoute && user && pathname !== '/auth/verify')
     return NextResponse.redirect(new URL(PROTECTED_ROOT, request.url));
+
+  // Admin route — server-side role check (cannot be bypassed client-side)
+  if (isAdminRoute && user) {
+    const { data: profile } = await supabase
+      .from('user_profiles')
+      .select('role')
+      .eq('id', user.id)
+      .maybeSingle();
+
+    if (!profile || profile.role !== 'admin')
+      return NextResponse.redirect(new URL(PROTECTED_ROOT, request.url));
   }
 
   return response;
 }
 
-export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],
-};
+export const config = { matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'] };

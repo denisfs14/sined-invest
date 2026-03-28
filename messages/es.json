@@ -8,7 +8,9 @@
     "strategy": "Estrategia",
     "history": "Historial",
     "settings": "Configuración",
-    "logout": "Cerrar sesión"
+    "logout": "Cerrar sesión",
+    "analysis": "Análisis",
+    "config": "Configuración"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -160,7 +162,8 @@
     "terms_agree": "Al crear cuenta, aceptas nuestros",
     "terms": "Términos de Uso",
     "and": "y la",
-    "privacy": "Política de Privacidad"
+    "privacy": "Política de Privacidad",
+    "error": "Error al iniciar sesión. Verifica tus datos."
   },
   "common": {
     "loading": "Cargando...",

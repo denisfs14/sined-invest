@@ -8,7 +8,9 @@
     "strategy": "Strategy",
     "history": "History",
     "settings": "Settings",
-    "logout": "Sign out"
+    "logout": "Sign out",
+    "analysis": "Analysis",
+    "config": "Configuration"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -160,7 +162,8 @@
     "terms_agree": "By signing up, you agree to our",
     "terms": "Terms of Use",
     "and": "and",
-    "privacy": "Privacy Policy"
+    "privacy": "Privacy Policy",
+    "error": "Error signing in. Check your credentials."
   },
   "common": {
     "loading": "Loading...",

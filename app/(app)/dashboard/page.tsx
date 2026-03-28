@@ -146,12 +146,20 @@ export default function DashboardPage() {
 
   const isEmpty = !loading && assets.length === 0;
 
-  // ── Live minute ticker for countdown urgency ───────────────────────────────
-  const [now, setNow] = useState(() => new Date());
+  // ── Live day ticker — only updates state when daysLeft changes ────────────
+  // Using a ref avoids triggering full re-renders every minute.
+  const nowRef = useRef(new Date());
+  const [todayStr, setTodayStr] = useState(() => new Date().toDateString());
   useEffect(() => {
-    const t = setInterval(() => setNow(new Date()), 60_000);
-    return () => clearInterval(t);
-  }, []);
+    const checkDay = setInterval(() => {
+      const newDay = new Date().toDateString();
+      nowRef.current = new Date();
+      // Only trigger re-render when the calendar date actually changes
+      if (newDay !== todayStr) setTodayStr(newDay);
+    }, 60_000);
+    return () => clearInterval(checkDay);
+  }, [todayStr]);
+  const now = nowRef.current;
 
   // ── Nearest upcoming ex-dividend (within 14 days) — "buy before" trigger ──
   const nextExDiv = useMemo(() => {
@@ -810,9 +818,9 @@ function AdvancedModeLockTeaser({ totalValue, thisMonthDivs, classes, assets, ho
   ];
 
   return (
-    <div style={{ position: 'relative', marginBottom: '20px', marginTop: '4px' }}>
+    <div style={{ position: 'relative', marginBottom: '20px', marginTop: '4px', minHeight: '160px' }}>
       {/* Blurred real data */}
-      <div style={{ filter: 'blur(5px)', pointerEvents: 'none', userSelect: 'none', opacity: 0.5 }}>
+      <div style={{ filter: 'blur(5px)', pointerEvents: 'none', userSelect: 'none', opacity: 0.5, minHeight: '140px' }}>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '10px', marginBottom: '10px' }}>
           {items.map(({ label, val }) => (
             <div key={label} style={{ background: C.white, border: `1px solid ${C.gray200}`, borderRadius: '14px', padding: '18px' }}>

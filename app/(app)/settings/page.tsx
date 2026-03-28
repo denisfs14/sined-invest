@@ -90,31 +90,31 @@ export default function SettingsPage() {
 
   return (
     <>
-      <PageHeader title="Configurações" subtitle="Conta, segurança e dados" />
+      <PageHeader title={t('settings.title')} subtitle={t('settings.subtitle')} />
       <PageContent>
         <div style={{ maxWidth: '600px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
 
           {/* Account info */}
           <Card>
-            <CardHeader><User size={15} style={{ display: 'inline', marginRight: '8px' }} />Conta</CardHeader>
+            <CardHeader><User size={15} style={{ display: 'inline', marginRight: '8px' }} />{t('settings.account')}</CardHeader>
             <CardBody>
               <div style={SECTION_STYLE}>
                 <div>
-                  <div style={{ fontSize: '13px', fontWeight: '600', color: C.gray800 }}>Email</div>
+                  <div style={{ fontSize: '13px', fontWeight: '600', color: C.gray800 }}>{t('settings.email_label')}</div>
                   <div style={{ fontSize: '12px', color: C.gray400, marginTop: '2px' }}>{user?.email}</div>
                 </div>
                 <CheckCircle size={16} color={C.green} />
               </div>
               <div style={SECTION_STYLE}>
                 <div>
-                  <div style={{ fontSize: '13px', fontWeight: '600', color: C.gray800 }}>Plano</div>
+                  <div style={{ fontSize: '13px', fontWeight: '600', color: C.gray800 }}>{t('settings.plan_label')}</div>
                   <div style={{ fontSize: '12px', color: C.gray400, marginTop: '2px' }}>Gratuito · brapi.dev free tier</div>
                 </div>
                 <PlanBadge />
               </div>
               <div style={{ ...SECTION_STYLE, borderBottom: 'none' }}>
                 <div>
-                  <div style={{ fontSize: '13px', fontWeight: '600', color: C.gray800 }}>Membro desde</div>
+                  <div style={{ fontSize: '13px', fontWeight: '600', color: C.gray800 }}>{t('settings.member_since')}</div>
                   <div style={{ fontSize: '12px', color: C.gray400, marginTop: '2px' }}>
                     {user?.created_at ? new Date(user.created_at).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' }) : '—'}
                   </div>
@@ -125,7 +125,7 @@ export default function SettingsPage() {
 
           {/* Security */}
           <Card>
-            <CardHeader><Lock size={15} style={{ display: 'inline', marginRight: '8px' }} />Segurança</CardHeader>
+            <CardHeader><Lock size={15} style={{ display: 'inline', marginRight: '8px' }} />{t('settings.security')}</CardHeader>
             <CardBody>
               <button onClick={() => setShowPwModal(true)} style={{
                 width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
@@ -133,7 +133,7 @@ export default function SettingsPage() {
                 fontFamily: 'var(--font)', borderBottom: `1px solid ${C.gray100}`,
               }}>
                 <div style={{ textAlign: 'left' }}>
-                  <div style={{ fontSize: '13px', fontWeight: '600', color: C.gray800 }}>Alterar Senha</div>
+                  <div style={{ fontSize: '13px', fontWeight: '600', color: C.gray800 }}>{t('settings.change_password')}</div>
                   <div style={{ fontSize: '12px', color: C.gray400, marginTop: '2px' }}>Atualize sua senha de acesso</div>
                 </div>
                 <ChevronRight size={16} color={C.gray400} />
@@ -144,7 +144,7 @@ export default function SettingsPage() {
                 fontFamily: 'var(--font)',
               }}>
                 <div style={{ textAlign: 'left' }}>
-                  <div style={{ fontSize: '13px', fontWeight: '600', color: C.gray800 }}>Sair da conta</div>
+                  <div style={{ fontSize: '13px', fontWeight: '600', color: C.gray800 }}>{t('settings.sign_out')}</div>
                   <div style={{ fontSize: '12px', color: C.gray400, marginTop: '2px' }}>Encerrar sessão atual</div>
                 </div>
                 <LogOut size={16} color={C.gray400} />
@@ -163,25 +163,25 @@ export default function SettingsPage() {
 
           {/* Danger Zone */}
           <Card style={{ border: `1px solid #FECACA` }}>
-            <CardHeader>⚠️ Zona de Perigo</CardHeader>
+            <CardHeader>{t('settings.danger_zone')}</CardHeader>
             <CardBody>
               <div style={SECTION_STYLE}>
                 <div>
-                  <div style={{ fontSize: '13px', fontWeight: '600', color: C.gray800 }}>Resetar Portfólio</div>
+                  <div style={{ fontSize: '13px', fontWeight: '600', color: C.gray800 }}>{t('settings.reset_portfolio')}</div>
                   <div style={{ fontSize: '12px', color: C.gray400, marginTop: '2px' }}>
                     Apaga todos os ativos, operações e histórico. Mantém o login.
                   </div>
                 </div>
-                <Button variant="danger" size="sm" onClick={() => setShowReset(true)}>Resetar</Button>
+                <Button variant="danger" size="sm" onClick={() => setShowReset(true)}>{t('settings.reset_btn')}</Button>
               </div>
               <div style={{ ...SECTION_STYLE, borderBottom: 'none' }}>
                 <div>
-                  <div style={{ fontSize: '13px', fontWeight: '600', color: C.red }}>Excluir Conta</div>
+                  <div style={{ fontSize: '13px', fontWeight: '600', color: C.red }}>{t('settings.delete_account')}</div>
                   <div style={{ fontSize: '12px', color: C.gray400, marginTop: '2px' }}>
                     Remove permanentemente sua conta e todos os dados.
                   </div>
                 </div>
-                <Button variant="danger" size="sm" onClick={() => setShowDelete(true)}>Excluir</Button>
+                <Button variant="danger" size="sm" onClick={() => setShowDelete(true)}>{t('settings.delete_btn')}</Button>
               </div>
             </CardBody>
           </Card>
@@ -193,11 +193,11 @@ export default function SettingsPage() {
       <Modal open={showPwModal} onClose={() => { setShowPwModal(false); setPwError(''); }}
         title="Alterar Senha" width={440}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-          <FormGroup label="Nova Senha">
+          <FormGroup label={t('settings.new_password')}>
             <Input type="password" placeholder="Mínimo 8 caracteres"
               value={newPw} onChange={e => setNewPw(e.target.value)} />
           </FormGroup>
-          <FormGroup label="Confirmar Nova Senha">
+          <FormGroup label={t('settings.confirm_password')}>
             <Input type="password" placeholder="Repita a nova senha"
               value={confirmPw} onChange={e => setConfirmPw(e.target.value)} />
           </FormGroup>
@@ -208,8 +208,8 @@ export default function SettingsPage() {
           )}
         </div>
         <ModalFooter>
-          <Button variant="ghost" onClick={() => setShowPwModal(false)}>Cancelar</Button>
-          <Button variant="primary" onClick={handleChangePassword} loading={loading}>Alterar Senha</Button>
+          <Button variant="ghost" onClick={() => setShowPwModal(false)}>{t('settings.cancel')}</Button>
+          <Button variant="primary" onClick={handleChangePassword} loading={loading}>{t('settings.change_password')}</Button>
         </ModalFooter>
       </Modal>
 
@@ -228,7 +228,7 @@ export default function SettingsPage() {
           </FormGroup>
         </div>
         <ModalFooter>
-          <Button variant="ghost" onClick={() => setShowReset(false)}>Cancelar</Button>
+          <Button variant="ghost" onClick={() => setShowReset(false)}>{t('settings.cancel')}</Button>
           <Button variant="danger" disabled={resetWord !== 'RESETAR'} loading={loading} onClick={handleResetPortfolio}>
             Confirmar Reset
           </Button>
@@ -250,7 +250,7 @@ export default function SettingsPage() {
           </FormGroup>
         </div>
         <ModalFooter>
-          <Button variant="ghost" onClick={() => setShowDelete(false)}>Cancelar</Button>
+          <Button variant="ghost" onClick={() => setShowDelete(false)}>{t('settings.cancel')}</Button>
           <Button variant="danger" disabled={deleteWord !== 'EXCLUIR'} loading={loading} onClick={handleDeleteAccount}>
             Excluir Conta
           </Button>
