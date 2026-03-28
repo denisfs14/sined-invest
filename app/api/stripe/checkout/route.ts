@@ -92,24 +92,25 @@ export async function POST(req: NextRequest) {
     }
 
     // ── 5. Create Checkout Session ────────────────────────────────────────────
-    // BOTH metadata fields are set redundantly so the webhook can always
-    // identify the user even if one field is somehow lost.
-    //
-    // customer_email: always set — required for the email fallback path in webhook.
-    const session = await getStripe().checkout.sessions.create({
-      mode:           'subscription',
-      customer:       customerId,
-      customer_email: user.email,   // ALWAYS set — enables email fallback in webhook
-      line_items:     [{ price: priceId, quantity: 1 }],
+    // Stripe rule: customer and customer_email are mutually exclusive.
+    // - Existing customer → send only `customer` (Stripe already has their email)
+    // - New customer      → send only `customer_email` (no customer object yet)
+    // Email fallback for webhook is covered by metadata.user_email in both cases.
+    const sessionParams = customerId
+      ? { customer: customerId }                         // existing — no customer_email
+      : { customer_email: user.email } as const;         // new — no customer object
 
-      // Session metadata — primary source for webhook user identification
+    const session = await getStripe().checkout.sessions.create({
+      mode:       'subscription',
+      ...sessionParams,
+      line_items: [{ price: priceId, quantity: 1 }],
+
       metadata: {
         user_id:       user.id,     // PRIMARY — webhook reads this first
         user_email:    user.email,  // BACKUP  — webhook email fallback
         selected_plan: plan,
       },
 
-      // Subscription metadata — available on renewal/update events
       subscription_data: {
         metadata: {
           user_id:       user.id,
