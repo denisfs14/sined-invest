@@ -329,7 +329,13 @@
     "language_desc": "Escolha seu idioma preferido",
     "language_updated": "Idioma atualizado",
     "pw_error": "Erro ao alterar senha",
-    "reset_ok": "Portfólio resetado com sucesso"
+    "reset_ok": "Portfólio resetado com sucesso",
+    "plan_free_label": "Plano gratuito · Acesso limitado",
+    "billing_title": "Cobrança e Assinatura",
+    "billing_manage": "Gerenciar assinatura →",
+    "billing_loading": "Abrindo…",
+    "plan_upgrade_hint": "Faça upgrade para desbloquear todos os recursos.",
+    "plan_upgrade_link": "Ver planos →"
   },
   "strategy": {
     "title": "Estratégia",
@@ -635,6 +641,19 @@
     "footer_privacy": "Privacidade",
     "footer_privacy_href": "/legal/privacy",
     "footer_how": "Como funciona",
-    "footer_how_href": "/methodology"
+    "footer_how_href": "/methodology",
+    "loading": "Redirecionando…"
+  },
+  "subscription": {
+    "success_loading_title": "Confirmando sua assinatura…",
+    "success_loading_desc": "Estamos ativando seu acesso. Isso leva alguns segundos.",
+    "success_attempt": "Verificação {n}/12…",
+    "success_title": "Pagamento confirmado!",
+    "success_desc": "Seu plano foi ativado. Bem-vindo à experiência completa.",
+    "success_webhook_note": "O acesso é concedido pelo processador de pagamento — pode levar até 30 segundos para aparecer.",
+    "success_cta": "Ir ao Dashboard",
+    "error_title": "Algo deu errado",
+    "error_desc": "Se você foi cobrado, seu plano será ativado em breve pelo processador. Verifique seu e-mail para o recibo.",
+    "error_cta": "Voltar ao Dashboard"
   }
 }

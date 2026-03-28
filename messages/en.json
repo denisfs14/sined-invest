@@ -329,7 +329,13 @@
     "language_desc": "Choose your preferred language",
     "language_updated": "Language updated",
     "pw_error": "Error changing password",
-    "reset_ok": "Portfolio reset successfully"
+    "reset_ok": "Portfolio reset successfully",
+    "plan_free_label": "Free plan · Limited access",
+    "billing_title": "Billing & Subscription",
+    "billing_manage": "Manage subscription →",
+    "billing_loading": "Opening…",
+    "plan_upgrade_hint": "Upgrade to unlock all features.",
+    "plan_upgrade_link": "See plans →"
   },
   "strategy": {
     "title": "Strategy",
@@ -635,6 +641,19 @@
     "footer_privacy": "Privacy",
     "footer_privacy_href": "/legal/privacy",
     "footer_how": "How it works",
-    "footer_how_href": "/methodology"
+    "footer_how_href": "/methodology",
+    "loading": "Redirecting…"
+  },
+  "subscription": {
+    "success_loading_title": "Confirming your subscription…",
+    "success_loading_desc": "We are activating your access. This usually takes a few seconds.",
+    "success_attempt": "Check {n}/12…",
+    "success_title": "Payment confirmed!",
+    "success_desc": "Your plan has been activated. Welcome to the upgraded experience.",
+    "success_webhook_note": "Access is granted via our payment processor — it may take up to 30 seconds to appear.",
+    "success_cta": "Go to Dashboard",
+    "error_title": "Something went wrong",
+    "error_desc": "If you were charged, your plan will be activated shortly by our payment processor. Check your email for a receipt.",
+    "error_cta": "Back to Dashboard"
   }
 }

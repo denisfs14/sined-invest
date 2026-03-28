@@ -1,11 +1,11 @@
 import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
-  output: 'export',
+  // NOTE: output:'export' removed — API routes are required for Stripe webhook + checkout.
+  // Deploy to a Node.js host (Vercel, Railway, Render) not a static CDN.
   trailingSlash: true,
   images: { unoptimized: true },
 
-  // Remove console.logs in production builds
   compiler: {
     removeConsole: process.env.NODE_ENV === 'production'
       ? { exclude: ['error', 'warn'] }

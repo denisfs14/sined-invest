@@ -329,7 +329,13 @@
     "language_desc": "Elige tu idioma preferido",
     "language_updated": "Idioma actualizado",
     "pw_error": "Error al cambiar contraseña",
-    "reset_ok": "Portafolio reseteado exitosamente"
+    "reset_ok": "Portafolio reseteado exitosamente",
+    "plan_free_label": "Plan gratuito · Acceso limitado",
+    "billing_title": "Facturación y Suscripción",
+    "billing_manage": "Gestionar suscripción →",
+    "billing_loading": "Abriendo…",
+    "plan_upgrade_hint": "Mejora tu plan para desbloquear todas las funciones.",
+    "plan_upgrade_link": "Ver planes →"
   },
   "strategy": {
     "title": "Estrategia",
@@ -635,6 +641,19 @@
     "footer_privacy": "Privacidad",
     "footer_privacy_href": "/legal/privacy",
     "footer_how": "Cómo funciona",
-    "footer_how_href": "/methodology"
+    "footer_how_href": "/methodology",
+    "loading": "Redirigiendo…"
+  },
+  "subscription": {
+    "success_loading_title": "Confirmando tu suscripción…",
+    "success_loading_desc": "Estamos activando tu acceso. Esto tarda unos segundos.",
+    "success_attempt": "Verificación {n}/12…",
+    "success_title": "¡Pago confirmado!",
+    "success_desc": "Tu plan ha sido activado. Bienvenido a la experiencia completa.",
+    "success_webhook_note": "El acceso es otorgado por el procesador de pago — puede tardar hasta 30 segundos en aparecer.",
+    "success_cta": "Ir al Dashboard",
+    "error_title": "Algo salió mal",
+    "error_desc": "Si fuiste cobrado, tu plan se activará pronto. Revisa tu email para el recibo.",
+    "error_cta": "Volver al Dashboard"
   }
 }
