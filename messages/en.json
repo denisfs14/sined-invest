@@ -230,7 +230,14 @@
     "badge_timing": "Ideal Timing",
     "badge_this_week": "This week",
     "badge_today": "Today!",
-    "badge_days": "{n}d"
+    "badge_days": "{n}d",
+    "days_remaining": "remaining",
+    "waiting_label": "Waiting",
+    "dividend_label": "Dividend",
+    "no_classes_title": "No classes",
+    "no_classes_desc": "Configure in Strategy",
+    "notice_receive_amount": "to receive {amount} · ex-div in {days}d",
+    "high_yield_badge": "High Yield"
   },
   "contribution": {
     "title": "Contribute",

@@ -33,7 +33,10 @@ export default function DashboardPage() {
     mode, planData,
   } = useApp();
 
-  const { t } = useT();
+  const { t, locale } = useT();
+  // Convert i18n locale to date locale string
+  const dateLocale = locale === 'pt-BR' ? 'pt-BR' : locale === 'es' ? 'es-ES' : 'en-US';
+
   const [syncing,  setSyncing]  = useState(false);
   const [syncMsg,  setSyncMsg]  = useState('');
   const lastSyncRef = useRef<Date | null>(null); // ref, not state — avoids re-render
@@ -230,7 +233,7 @@ export default function DashboardPage() {
                     </span>
                   </div>
                   <div style={{ fontSize: '17px', fontWeight: '800', color: '#FFFFFF', letterSpacing: '-0.3px' }}>
-                    {t('dashboard.buy_ticker_before', { ticker: nextExDiv.asset?.ticker ?? '—', date: nextExDiv.buyDeadline.toLocaleDateString('pt-BR', { day: 'numeric', month: 'long' }) })}
+                    {t('dashboard.buy_ticker_before', { ticker: nextExDiv.asset?.ticker ?? '—', date: nextExDiv.buyDeadline.toLocaleDateString(dateLocale, { day: 'numeric', month: 'long' }) })}
                   </div>
                   <div style={{ fontSize: '13px', color: 'rgba(255,255,255,.65)', marginTop: '3px' }}>
                     {t('dashboard.to_receive_div', { amount: formatCurrency(nextExDiv.ev.expected_amount), date: formatDate(nextExDiv.ev.ex_date) })}
@@ -266,7 +269,7 @@ export default function DashboardPage() {
               ))}
             </div>
             <div style={{ display: 'flex', gap: '12px' }}>
-              <Link href="/portfolio"><Button variant="gold" size="sm">Importar Carteira <ArrowRight size={13} /></Button></Link>
+              <Link href="/portfolio"><Button variant="gold" size="sm">{t('dashboard.onboard_import_btn')} <ArrowRight size={13} /></Button></Link>
               <Link href="/methodology" target="_blank"><Button variant="ghost" size="sm" style={{ color: 'rgba(255,255,255,.5)', borderColor: 'rgba(255,255,255,.1)' }}><BookOpen size={13} /> Como funciona</Button></Link>
             </div>
           </div>
@@ -291,15 +294,15 @@ export default function DashboardPage() {
                 <Timer size={15} color="#92400E" style={{ flexShrink: 0 }} />
                 <div>
                   <span style={{ fontSize: '13px', fontWeight: '800', color: '#92400E' }}>
-                    {t('dashboard.buy_ticker_short', { ticker: nextExDiv.asset?.ticker ?? '—', date: nextExDiv.buyDeadline.toLocaleDateString('pt-BR', { day: 'numeric', month: 'short' }) })}
+                    {t('dashboard.buy_ticker_short', { ticker: nextExDiv.asset?.ticker ?? '—', date: nextExDiv.buyDeadline.toLocaleDateString(dateLocale, { day: 'numeric', month: 'short' }) })}
                   </span>
                   <span style={{ fontSize: '12px', color: '#92400E', opacity: 0.7, marginLeft: '8px' }}>
-                    para receber {formatCurrency(nextExDiv.ev.expected_amount)} · ex-div em {nextExDiv.daysLeft}d
+                    {t('dashboard.notice_receive_amount', { amount: formatCurrency(nextExDiv.ev.expected_amount), days: nextExDiv.daysLeft })}
                   </span>
                 </div>
               </div>
               <div style={{ fontSize: '11px', fontWeight: '800', color: '#92400E', background: '#FEF3C7', padding: '4px 12px', borderRadius: '20px', whiteSpace: 'nowrap', flexShrink: 0 }}>
-                {nextExDiv.daysLeft}d restantes →
+                {t('dashboard.notice_days_remaining', { days: nextExDiv.daysLeft })}
               </div>
             </div>
           </Link>
@@ -328,7 +331,7 @@ export default function DashboardPage() {
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: '#FEF3C7', border: '1px solid #FDE68A', borderRadius: '20px', padding: '4px 12px' }}>
                     <Timer size={11} color="#92400E" />
                     <span style={{ fontSize: '10px', fontWeight: '800', color: '#92400E', letterSpacing: '1px', textTransform: 'uppercase' }}>
-                      Comprar antes de {nextExDiv.buyDeadline.toLocaleDateString('pt-BR', { day: 'numeric', month: 'short' })} · {nextExDiv.daysLeft}d restantes
+                      {t('dashboard.banner_buy_label', { ticker: nextExDiv.asset?.ticker ?? '—', date: nextExDiv.buyDeadline.toLocaleDateString(dateLocale, { day: 'numeric', month: 'short' }) })} · {t('dashboard.badge_days', { n: nextExDiv.daysLeft })} {t('dashboard.days_remaining')}
                     </span>
                   </div>
                 </div>
@@ -366,7 +369,7 @@ export default function DashboardPage() {
                   )}
                   <div style={{ fontSize: '26px', fontWeight: '800', color: C.white, letterSpacing: '-0.8px', marginBottom: '6px' }}>
                     {nextExDiv && nextExDiv.daysLeft <= 7
-                      ? t('dashboard.buy_ticker_short', { ticker: nextExDiv.asset?.ticker ?? '—', date: nextExDiv.buyDeadline.toLocaleDateString('pt-BR', { day: 'numeric', month: 'short' }) })
+                      ? t('dashboard.buy_ticker_short', { ticker: nextExDiv.asset?.ticker ?? '—', date: nextExDiv.buyDeadline.toLocaleDateString(dateLocale, { day: 'numeric', month: 'short' }) })
                       : decision.label}
                   </div>
                   <div style={{ fontSize: '14px', color: 'rgba(255,255,255,.45)', lineHeight: '1.5', marginBottom: '8px' }}>
@@ -437,7 +440,7 @@ export default function DashboardPage() {
                   </div>
                   <div style={{ fontSize: '12px', color: C.gray600, lineHeight: '1.5', marginBottom: '6px' }}>
                     {redAssets.length > 0
-                      ? `Comprar agora aumenta posição com desconto sobre o PM`
+                      ? t('dashboard.card_opp_discount')
                       : t('dashboard.card_all_above_pm')}
                   </div>
                   {redAssets.length > 0 && (
@@ -459,7 +462,7 @@ export default function DashboardPage() {
                     <span style={{ fontSize: '10px', fontWeight: '700', color: window.ready ? C.goldL : C.gray400, textTransform: 'uppercase', letterSpacing: '1px' }}>{t('dashboard.buy_window')}</span>
                   </div>
                   <div style={{ fontSize: '20px', fontWeight: '800', color: window.ready ? C.white : C.gray400, marginBottom: '6px' }}>
-                    {window.ready ? t('dashboard.strip_window_open') : 'Aguardando'}
+                    {window.ready ? t('dashboard.strip_window_open') : t('dashboard.waiting_label')}
                   </div>
                   <div style={{ fontSize: '12px', color: window.ready ? 'rgba(255,255,255,.5)' : C.gray500, lineHeight: '1.5', marginBottom: '6px' }}>
                     {window.ready
@@ -495,14 +498,14 @@ export default function DashboardPage() {
                       <span style={{ fontSize: '10px', fontWeight: '700', color: '#92400E', textTransform: 'uppercase', letterSpacing: '1px' }}>Data Ex-Dividendo</span>
                     </div>
                     <div style={{ fontSize: '20px', fontWeight: '800', color: C.navy, marginBottom: '6px' }}>
-                      {nextExDiv.asset?.ticker ?? 'Provento'}
+                      {nextExDiv.asset?.ticker ?? t('dashboard.dividend_label')}
                     </div>
                     <div style={{ fontSize: '12px', color: C.gray600, lineHeight: '1.5', marginBottom: '8px' }}>
                       Ex-div: <strong>{formatDate(nextExDiv.ev.ex_date)}</strong>
                       {' · '}{formatCurrency(nextExDiv.ev.expected_amount)} esperados
                     </div>
                     <div style={{ fontSize: '11px', fontWeight: '800', color: nextExDiv.daysLeft <= 3 ? '#92400E' : C.blue, background: nextExDiv.daysLeft <= 3 ? '#FEF3C7' : '#EFF6FF', padding: '4px 10px', borderRadius: '8px', display: 'inline-block' }}>
-                      → Comprar antes de {nextExDiv.buyDeadline.toLocaleDateString('pt-BR', { day: 'numeric', month: 'short' })}
+                      {t('dashboard.card_buy_before_cta', { date: nextExDiv.buyDeadline.toLocaleDateString(dateLocale, { day: 'numeric', month: 'short' }) })}
                     </div>
                   </div>
                 ) : upcomingDivs.length > 0 ? (
@@ -569,7 +572,7 @@ export default function DashboardPage() {
                 <div style={{ fontSize: '10px', fontWeight: '700', color: C.gold, letterSpacing: '1.5px', textTransform: 'uppercase' }}>{t('dashboard.adv_income_label')}</div>
                 {thisMonthDivs / totalValue * 1200 > 8 && (
                   <div style={{ background: `${C.green}22`, border: `1px solid ${C.green}44`, borderRadius: '20px', padding: '2px 8px', fontSize: '9px', fontWeight: '800', color: C.green, letterSpacing: '1px', textTransform: 'uppercase' }}>
-                    Alto Yield
+                    {t('dashboard.high_yield_badge')}
                   </div>
                 )}
               </div>
@@ -639,7 +642,7 @@ export default function DashboardPage() {
             <Card>
               <CardHeader action={<Link href="/portfolio"><Button variant="ghost" size="sm">{t('dashboard.view_portfolio_btn')}</Button></Link>}>Alocação por Classe</CardHeader>
               <CardBody>
-                {classes.length === 0 ? <EmptyState icon="📂" title="Sem classes" description="Configure em Estratégia" /> : classes.map(cls => {
+                {classes.length === 0 ? <EmptyState icon="📂" title={t('dashboard.no_classes_title')} description={t('dashboard.no_classes_desc')} /> : classes.map(cls => {
                   const val = assets.filter(a => a.asset_class_id === cls.id).reduce((s, a) => s + (holdingsMap[a.id]?.quantity ?? 0) * a.current_price, 0);
                   const pct = totalValue > 0 ? (val / totalValue) * 100 : 0;
                   return (
@@ -664,7 +667,7 @@ export default function DashboardPage() {
         {/* ── UPCOMING DIVIDENDS ───────────────────────────────────────────────── */}
         {!isEmpty && upcomingDivs.length > 0 && mode === 'advanced' && (
           <Card style={{ marginBottom: '20px' }}>
-            <CardHeader action={<Link href="/dividends"><Button variant="ghost" size="sm">Ver calendário →</Button></Link>}>📅 Próximos Proventos</CardHeader>
+            <CardHeader action={<Link href="/dividends"><Button variant="ghost" size="sm">{t('dashboard.upcoming_div_link')}</Button></Link>}>{t('dashboard.upcoming_div_title')}</CardHeader>
             <CardBody style={{ padding: '0 24px 16px' }}>
               {upcomingDivs.map(ev => {
                 const asset = assets.find(a => a.id === ev.asset_id);
@@ -701,7 +704,7 @@ export default function DashboardPage() {
                   action={<Link href="/contribution"><Button variant="primary" size="sm"><Zap size={13} /> {t('dashboard.calculate_btn')}</Button></Link>} />
               ) : (<>
                 <div style={{ fontSize: '12px', color: C.gray400, marginBottom: '16px' }}>
-                  {formatDate(lastSim.created_at)} · {lastSim.items.length} ativo{lastSim.items.length !== 1 ? 's' : ''} · {formatCurrency(lastSim.total_amount)}
+                  {formatDate(lastSim.created_at)} · {lastSim.items.length === 1 ? t('dashboard.red_asset_count', { count: lastSim.items.length }) : t('dashboard.red_asset_count_pl', { count: lastSim.items.length })} · {formatCurrency(lastSim.total_amount)}
                 </div>
                 {lastSim.items.slice(0, mode === 'simple' ? 3 : 5).map((item, i) => {
                   const asset = item.asset;
@@ -778,7 +781,7 @@ function AdvancedModeLockTeaser({ totalValue, thisMonthDivs, classes, assets, ho
   holdingsMap: Record<string, { quantity: number; avg_price: number }>;
   totalPL: number;
 }) {
-  const { t } = useT();
+  const { t, locale } = useT();
   // Compute real allocation data to show blurred
   const topClass = useMemo(() => {
     let best = { name: '—', pct: 0 };
@@ -874,7 +877,7 @@ function RedAssetsCard({ redAssets, holdingsMap, classes, totalValue }: {
   redAssets: Asset[]; holdingsMap: Record<string, { quantity: number; avg_price: number }>;
   classes: AssetClass[]; totalValue: number;
 }) {
-  const { t } = useT();
+  const { t, locale } = useT();
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
 
   const groups = useMemo(() => {

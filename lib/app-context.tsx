@@ -81,7 +81,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const loadData = useCallback(async (u: User) => {
     setState(s => ({ ...s, loading: true }));
     try {
-      // Get single portfolio — never creates duplicate thanks to fixed service
       const portfolio = await db.getOrCreatePortfolio(u.id);
 
       const [assets, classes, holdingsMap, strategy, history, dividends, operations, cashBalance, cashEvents] = await Promise.all([
@@ -96,29 +95,36 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         db.fetchCashEvents(portfolio.id),
       ]);
 
-      // Auto-sync red flags based on price vs avg_price
       try { await syncRedFlags(portfolio.id); } catch {}
-
-      // Reload assets after sync
       const syncedAssets = await db.fetchAssets(portfolio.id);
 
-      // ─── SOURCE OF TRUTH: user_profiles, not auth metadata ─────────────
+      // ─── SOURCE OF TRUTH: user_profiles ──────────────────────────────────
+      // fetchMyProfile() reads public.user_profiles, not auth metadata.
       // Admin panel changes to plan/role take effect here on next login/refresh.
-      let planData = getUserPlanData(); // safe fallback (free)
+      let planData = getUserPlanData(); // safe FREE fallback
       try {
         const profile = await fetchMyProfile();
+        console.log('[SINED] USER PROFILE from user_profiles:', profile); // debug log
         if (profile) {
-          const effectivePlan = getEffectivePlan(profile); // respects admin/special_access/override
-          planData = getUserPlanData(effectivePlan);
-          // Admin always gets full advanced access
           if (checkIsAdmin(profile)) {
+            // Admin always has full advanced access regardless of stored plan
             planData = { plan: 'ADVANCED', mode: 'advanced', isDemo: false, canSimple: true, canAdv: true };
+          } else {
+            const effectivePlan = getEffectivePlan(profile);
+            planData = getUserPlanData(effectivePlan);
           }
         }
-      } catch {
-        // Fallback to metadata if profile fetch fails (e.g. first-time user before trigger)
+      } catch (profileErr) {
+        logger.error('fetchMyProfile failed, falling back to metadata:', profileErr);
+        // Fallback: use auth metadata if profile row doesn't exist yet
         planData = getUserPlanData(u.user_metadata?.plan);
       }
+
+      // ─── CRITICAL: update BOTH state.mode AND the separate mode useState ──
+      // Without setModeState here, the rendered mode stays 'simple' forever
+      // regardless of what planData says.
+      setModeState(planData.mode === 'advanced' ? 'advanced' : 'simple');
+
       setState({
         user: u, portfolio,
         assets: syncedAssets, classes, holdingsMap,
