@@ -240,7 +240,7 @@ export async function clearHistoryDB(portfolioId: string): Promise<void> {
 export async function fetchDividends(portfolioId: string): Promise<DividendEvent[]> {
   const { data, error } = await supabase
     .from('dividend_events')
-    .select('*, asset:assets(ticker, name)')
+    .select('*')
     .eq('portfolio_id', portfolioId)
   if (error) throw error;
   const sortedData = (data ?? []).sort(
