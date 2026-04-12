@@ -242,9 +242,12 @@ export async function fetchDividends(portfolioId: string): Promise<DividendEvent
     .from('dividend_events')
     .select('*, asset:assets(ticker, name)')
     .eq('portfolio_id', portfolioId)
-    .order('payment_date');
   if (error) throw error;
-  return data ?? [];
+  const sortedData = (data ?? []).sort(
+    (a, b) =>
+      new Date(a.payment_date).getTime() - new Date(b.payment_date).getTime()
+  );
+  return sortedData;
 }
 
 export async function insertDividend(data: Omit<DividendEvent, 'id'>): Promise<DividendEvent> {
