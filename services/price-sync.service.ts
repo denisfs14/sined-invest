@@ -123,7 +123,7 @@ async function fetchYahooDividends(ticker: string): Promise<RawDividend[]> {
       return [];
     }
 
-    logger.log(`[yahoo-proxy] ${ticker}: ${data.dividends.length} events from Yahoo Finance`);
+    console.log(`[yahoo-proxy] ${ticker}: ${data.dividends.length} events from Yahoo Finance`);
 
     return data.dividends.map((d: { exDate: string; paymentDate: string; amountPerUnit: number }) => ({
       paymentDate:   d.paymentDate,
@@ -213,11 +213,11 @@ export async function syncDividends(
       );
 
       // Fetch from providers — brapi first, Yahoo fallback
-      logger.log(`[syncDividends] Fetching ${asset.ticker} via brapi...`);
+      console.log(`[syncDividends] Fetching ${asset.ticker} via brapi...`);
       let raws: RawDividend[] = await fetchBrapiDividends(asset.ticker);
 
       if (raws.length === 0) {
-        logger.log(`[syncDividends] brapi returned 0 for ${asset.ticker}, trying Yahoo Finance proxy...`);
+        console.log(`[syncDividends] brapi returned 0 for ${asset.ticker}, trying Yahoo Finance proxy...`);
         raws = await fetchYahooDividends(asset.ticker);
       }
 
@@ -226,7 +226,7 @@ export async function syncDividends(
         continue;
       }
 
-      logger.log(`[syncDividends] ${asset.ticker}: ${raws.length} raw events from provider`);
+      console.log(`[syncDividends] ${asset.ticker}: ${raws.length} raw events from provider`);
 
       const toInsert = [];
       for (const raw of raws) {
@@ -282,7 +282,7 @@ export async function syncDividends(
     await new Promise(r => setTimeout(r, 300));
   }
 
-  logger.log(`[syncDividends] Done — synced: ${synced}, errors: ${errors.length}`, errors.length ? errors : '');
+  console.log(`[syncDividends] Done — synced: ${synced}, errors: ${errors.length}`, errors.length ? errors : '');
   return { synced, errors };
 }
 
