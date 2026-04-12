@@ -91,7 +91,7 @@ async function fetchBrapiDividends(ticker: string): Promise<RawDividend[]> {
         source:        'brapi',
       }));
 
-    logger.log(`[brapi] ${ticker}: ${mapped.length} dividend events`);
+    console.log(`[brapi] ${ticker}: ${mapped.length} dividend events`);
     return mapped;
   } catch {
     return [];
