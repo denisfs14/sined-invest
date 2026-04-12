@@ -12,7 +12,8 @@
     "analysis": "Análisis",
     "config": "Configuración",
     "upgrade_pro": "Mejorar a Pro",
-    "per_month": "$5/mo"
+    "per_month": "$9/mo",
+    "admin_panel": "Panel Admin"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -73,7 +74,7 @@
     "advanced_features_list": "Renta proyectada · Yield real · P&L por activo",
     "advanced_features_more": "Asignación por clase · Historial ilimitado · Exportación",
     "unlock_advanced_btn": "Desbloquear Advanced Mode →",
-    "per_month_cancel": "$12/month · Cancel anytime",
+    "per_month_cancel": "$19/month · Cancel anytime",
     "top_class": "Clase Principal",
     "projected_income_12m": "Renta Proyectada 12m",
     "avg_monthly_yield": "Yield Promedio Mensual",
@@ -165,7 +166,7 @@
     "lock_features": "Renta proyectada · Yield real · P&L por activo",
     "lock_features2": "Asignación por clase · Historial ilimitado · Exportación",
     "lock_btn": "Desbloquear Advanced Mode →",
-    "lock_price": "$12/month · Cancel anytime",
+    "lock_price": "$19/month · Cancel anytime",
     "lock_top_class": "Clase Principal",
     "lock_income_12m": "Renta Proyectada 12m",
     "lock_yield_avg": "Yield Promedio Mensual",
@@ -195,7 +196,7 @@
     "lock_title_inner": "✦ Advanced Mode — Bloqueado",
     "lock_subtitle_inner": "Desbloquea el análisis completo",
     "lock_btn_inner": "Desbloquear Advanced Mode →",
-    "lock_price_inner": "$12/month · Cancel anytime",
+    "lock_price_inner": "$19/month · Cancel anytime",
     "lock_pnl_total": "P&L Total",
     "lock_by_class_lbl": "Por Clase",
     "buy_ticker_before": "Comprar {ticker} antes del {date}",
@@ -329,13 +330,7 @@
     "language_desc": "Elige tu idioma preferido",
     "language_updated": "Idioma actualizado",
     "pw_error": "Error al cambiar contraseña",
-    "reset_ok": "Portafolio reseteado exitosamente",
-    "plan_free_label": "Plan gratuito · Acceso limitado",
-    "billing_title": "Facturación y Suscripción",
-    "billing_manage": "Gestionar suscripción →",
-    "billing_loading": "Abriendo…",
-    "plan_upgrade_hint": "Mejora tu plan para desbloquear todas las funciones.",
-    "plan_upgrade_link": "Ver planes →"
+    "reset_ok": "Portafolio reseteado exitosamente"
   },
   "strategy": {
     "title": "Estrategia",
@@ -509,11 +504,14 @@
     "add_btn_short": "Registrar",
     "add_btn_full": "+ Registrar",
     "calendar_title": "📅 Calendario de Dividendos",
-    "history_title": "Historial de Dividendos — Últimos 6 Meses",
-    "history_event": "evento",
-    "history_events_pl": "eventos",
-    "history_expected": "Esperado",
-    "current_month_title": "Este Mes — Detallado"
+    "new_btn": "Nuevo",
+    "col_expected": "Esperado",
+    "col_received": "Recibido",
+    "pending_section_title": "⏰ Pendientes de Confirmación",
+    "mark_received_btn": "✓ Marcar Recibido",
+    "marked_received": "{ticker} marcado como recibido",
+    "saved_ok": "Dividendo registrado",
+    "updated_ok": "Dividendo actualizado"
   },
   "modals": {
     "edit_asset": "Editar Activo",
@@ -584,7 +582,19 @@
     "access_expires": "Acceso expira el",
     "active_account": "Cuenta Activa",
     "manual_override": "Anulación Manual",
-    "special_access": "Acceso Especial"
+    "special_access": "Acceso Especial",
+    "nav_settings": "Configuración",
+    "stripe_mode_title": "Modo Stripe",
+    "stripe_mode_subtitle": "Cambia entre entornos Stripe Prueba y Live",
+    "stripe_mode_test": "Modo Prueba",
+    "stripe_mode_live": "Modo Live",
+    "stripe_mode_saved": "Modo Stripe actualizado ✓",
+    "stripe_mode_error": "Error al actualizar modo Stripe",
+    "stripe_mode_label": "Entorno activo",
+    "settings_title": "Configuración de la App",
+    "settings_subtitle": "Configuración global de la aplicación",
+    "stripe_warning_live": "⚠️ Modo Live activo — se procesarán pagos reales",
+    "stripe_warning_test": "✅ Modo Prueba activo — sin pagos reales"
   },
   "upgrade": {
     "back_to_dashboard": "Dashboard",
@@ -646,23 +656,6 @@
     "footer_privacy": "Privacidad",
     "footer_privacy_href": "/legal/privacy",
     "footer_how": "Cómo funciona",
-    "footer_how_href": "/methodology",
-    "loading": "Redirigiendo…"
-  },
-  "subscription": {
-    "success_loading_title": "Confirmando tu suscripción…",
-    "success_loading_desc": "Estamos activando tu acceso. Esto tarda unos segundos.",
-    "success_attempt": "Verificación {n}/12…",
-    "success_title": "¡Pago confirmado!",
-    "success_desc": "Tu plan ha sido activado. Bienvenido a la experiencia completa.",
-    "success_webhook_note": "El acceso es otorgado por el procesador de pago — puede tardar hasta 30 segundos en aparecer.",
-    "success_cta": "Ir al Dashboard",
-    "error_title": "Algo salió mal",
-    "error_desc": "Si fuiste cobrado, tu plan se activará pronto. Revisa tu email para el recibo.",
-    "error_cta": "Volver al Dashboard",
-    "timeout_title": "Pago recibido — activando…",
-    "timeout_desc": "Tu pago fue confirmado, pero la activación de tu plan está tardando un poco más de lo normal.",
-    "timeout_note": "Tu cuenta se actualizará en unos minutos. Revisa tu email para el comprobante.",
-    "timeout_cta": "Volver a la app"
+    "footer_how_href": "/methodology"
   }
 }

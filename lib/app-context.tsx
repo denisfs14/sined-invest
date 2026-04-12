@@ -32,6 +32,8 @@ interface AppState {
   // Plan & mode
   planData:   UserPlan;
   mode:       Mode;
+  // Role — 'admin' | 'user' — sourced from user_profiles.role
+  userRole: 'user' | 'admin';
 }
 
 interface AppActions {
@@ -72,6 +74,7 @@ const EMPTY: AppState = {
   priceMap: {}, lastPriceSync: null,
   loading: false, authLoading: true,
   planData: getUserPlanData(), mode: 'simple',
+  userRole: 'user',
 };
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
@@ -102,10 +105,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       // fetchMyProfile() reads public.user_profiles, not auth metadata.
       // Admin panel changes to plan/role take effect here on next login/refresh.
       let planData = getUserPlanData(); // safe FREE fallback
+      let userRole: 'user' | 'admin' = 'user';
       try {
         const profile = await fetchMyProfile();
         console.log('[SINED] USER PROFILE from user_profiles:', profile); // debug log
         if (profile) {
+          userRole = profile.role === 'admin' ? 'admin' : 'user';
           if (checkIsAdmin(profile)) {
             // Admin always has full advanced access regardless of stored plan
             planData = { plan: 'ADVANCED', mode: 'advanced', isDemo: false, canSimple: true, canAdv: true };
@@ -133,6 +138,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         priceMap: {}, lastPriceSync: null,
         loading: false, authLoading: false,
         planData, mode: planData.mode,
+        userRole,
       });
     } catch (e) {
       logger.error('loadData error:', e);

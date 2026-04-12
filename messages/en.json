@@ -12,7 +12,8 @@
     "analysis": "Analysis",
     "config": "Configuration",
     "upgrade_pro": "Upgrade to Pro",
-    "per_month": "$5/mo"
+    "per_month": "$9/mo",
+    "admin_panel": "Admin Panel"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -73,7 +74,7 @@
     "advanced_features_list": "Projected income · Real yield · P&L per asset",
     "advanced_features_more": "Allocation by class · Unlimited history · Export",
     "unlock_advanced_btn": "Unlock Advanced Mode →",
-    "per_month_cancel": "$12/month · Cancel anytime",
+    "per_month_cancel": "$19/month · Cancel anytime",
     "top_class": "Top Class",
     "projected_income_12m": "Projected Income 12m",
     "avg_monthly_yield": "Avg Monthly Yield",
@@ -165,7 +166,7 @@
     "lock_features": "Projected income · Real yield · P&L per asset",
     "lock_features2": "Allocation by class · Unlimited history · Export",
     "lock_btn": "Unlock Advanced Mode →",
-    "lock_price": "$12/month · Cancel anytime",
+    "lock_price": "$19/month · Cancel anytime",
     "lock_top_class": "Top Class",
     "lock_income_12m": "Projected Income 12m",
     "lock_yield_avg": "Avg Monthly Yield",
@@ -195,7 +196,7 @@
     "lock_title_inner": "✦ Advanced Mode — Locked",
     "lock_subtitle_inner": "Unlock full analysis",
     "lock_btn_inner": "Unlock Advanced Mode →",
-    "lock_price_inner": "$12/month · Cancel anytime",
+    "lock_price_inner": "$19/month · Cancel anytime",
     "lock_pnl_total": "P&L Total",
     "lock_by_class_lbl": "By Class",
     "buy_ticker_before": "Buy {ticker} before {date}",
@@ -329,13 +330,7 @@
     "language_desc": "Choose your preferred language",
     "language_updated": "Language updated",
     "pw_error": "Error changing password",
-    "reset_ok": "Portfolio reset successfully",
-    "plan_free_label": "Free plan · Limited access",
-    "billing_title": "Billing & Subscription",
-    "billing_manage": "Manage subscription →",
-    "billing_loading": "Opening…",
-    "plan_upgrade_hint": "Upgrade to unlock all features.",
-    "plan_upgrade_link": "See plans →"
+    "reset_ok": "Portfolio reset successfully"
   },
   "strategy": {
     "title": "Strategy",
@@ -509,11 +504,14 @@
     "add_btn_short": "Register",
     "add_btn_full": "+ Register",
     "calendar_title": "📅 Dividend Calendar",
-    "history_title": "6-Month History",
-    "history_event": "event",
-    "history_events_pl": "events",
-    "history_expected": "Expected",
-    "current_month_title": "This Month — Detailed"
+    "new_btn": "New",
+    "col_expected": "Expected",
+    "col_received": "Received",
+    "pending_section_title": "⏰ Pending Confirmation",
+    "mark_received_btn": "✓ Mark Received",
+    "marked_received": "{ticker} marked as received",
+    "saved_ok": "Dividend registered",
+    "updated_ok": "Dividend updated"
   },
   "modals": {
     "edit_asset": "Edit Asset",
@@ -584,7 +582,19 @@
     "access_expires": "Access expires at",
     "active_account": "Active Account",
     "manual_override": "Manual Override",
-    "special_access": "Special Access"
+    "special_access": "Special Access",
+    "nav_settings": "Settings",
+    "stripe_mode_title": "Stripe Mode",
+    "stripe_mode_subtitle": "Switch between Test and Live Stripe environments",
+    "stripe_mode_test": "Test Mode",
+    "stripe_mode_live": "Live Mode",
+    "stripe_mode_saved": "Stripe mode updated ✓",
+    "stripe_mode_error": "Failed to update Stripe mode",
+    "stripe_mode_label": "Active environment",
+    "settings_title": "App Settings",
+    "settings_subtitle": "Global application configuration",
+    "stripe_warning_live": "⚠️ Live mode active — real payments will be processed",
+    "stripe_warning_test": "✅ Test mode active — no real payments"
   },
   "upgrade": {
     "back_to_dashboard": "Dashboard",
@@ -646,23 +656,6 @@
     "footer_privacy": "Privacy",
     "footer_privacy_href": "/legal/privacy",
     "footer_how": "How it works",
-    "footer_how_href": "/methodology",
-    "loading": "Redirecting…"
-  },
-  "subscription": {
-    "success_loading_title": "Confirming your subscription…",
-    "success_loading_desc": "We are activating your access. This usually takes a few seconds.",
-    "success_attempt": "Check {n}/12…",
-    "success_title": "Payment confirmed!",
-    "success_desc": "Your plan has been activated. Welcome to the upgraded experience.",
-    "success_webhook_note": "Access is granted via our payment processor — it may take up to 30 seconds to appear.",
-    "success_cta": "Go to Dashboard",
-    "error_title": "Something went wrong",
-    "error_desc": "If you were charged, your plan will be activated shortly by our payment processor. Check your email for a receipt.",
-    "error_cta": "Back to Dashboard",
-    "timeout_title": "Payment received — activating…",
-    "timeout_desc": "Your payment was confirmed, but your plan activation is taking a bit longer than usual.",
-    "timeout_note": "Your account will be updated within a few minutes. Check your email for a receipt.",
-    "timeout_cta": "Back to app"
+    "footer_how_href": "/methodology"
   }
 }

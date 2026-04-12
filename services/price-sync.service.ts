@@ -70,16 +70,18 @@ async function fetchBrapiDividends(ticker: string): Promise<RawDividend[]> {
       `${BRAPI_BASE}/quote/${ticker}?token=${BRAPI_TOKEN}&dividends=true`,
       { cache: 'no-store' }
     );
-    if (!res.ok) return [];
+    if (!res.ok) {
+      logger.warn(`[brapi] HTTP ${res.status} for ${ticker}`);
+      return [];
+    }
     const data   = await res.json();
     const result = data?.results?.[0];
     const divs   = result?.dividendsData?.cashDividends ?? [];
 
-    return divs
+    const mapped = divs
       .filter((d: Record<string, unknown>) => (d.value || d.rate) && d.paymentDate)
       .map((d: Record<string, unknown>) => ({
         paymentDate:   String(d.paymentDate).slice(0, 10),
-        // brapi may provide approvedOn or declarationDate as ex_date proxy
         exDate:        d.approvedOn
           ? String(d.approvedOn).slice(0, 10)
           : d.lastDatePrior
@@ -88,50 +90,49 @@ async function fetchBrapiDividends(ticker: string): Promise<RawDividend[]> {
         amountPerUnit: Number(d.value ?? d.rate ?? 0),
         source:        'brapi',
       }));
+
+    logger.log(`[brapi] ${ticker}: ${mapped.length} dividend events`);
+    return mapped;
   } catch {
     return [];
   }
 }
 
-// ─── Yahoo Finance via allorigins CORS proxy ──────────────────────────────────
-// Yahoo returns ex-dividend dates under the 'dividends' events key.
-// The date field IS the ex-date; amount is per-unit.
-// Payment date is NOT available from Yahoo — we estimate it.
+// ─── Yahoo Finance via our own server-side proxy ───────────────────────────────
+// Previously used allorigins.win as a CORS proxy — this was unreliable and
+// frequently returned empty/error responses, silently killing the pipeline.
+// Now we call our own Next.js API route which fetches Yahoo Finance server-side
+// with no CORS restrictions and proper headers.
 async function fetchYahooDividends(ticker: string): Promise<RawDividend[]> {
   try {
-    const symbol   = `${ticker}.SA`;
-    const now      = Math.floor(Date.now() / 1000);
-    const yearAgo  = now - 365 * 24 * 3600;
-    const future   = now + 90 * 24 * 3600;
-    const yahooUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?events=dividends&interval=1mo&period1=${yearAgo}&period2=${future}`;
-
-    const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(yahooUrl)}`;
-    const res      = await fetch(proxyUrl, { cache: 'no-store' });
-    if (!res.ok) return [];
-
-    const proxy = await res.json();
-    const parsed = JSON.parse(proxy.contents ?? '{}');
-
-    // Yahoo dividends event: { date: unix_timestamp, amount: per_unit }
-    // The 'date' field in Yahoo dividends is the EX-DATE, not payment date.
-    const divs = parsed?.chart?.result?.[0]?.events?.dividends ?? {};
-
-    return Object.values(divs).map((d: unknown) => {
-      const div    = d as { date: number; amount: number };
-      const exDate = new Date(div.date * 1000).toISOString().slice(0, 10);
-      // Estimate payment date: FIIs typically pay ~5 business days after ex-date.
-      // Stocks typically ~30 days after. We use ex+5 as a safe estimate,
-      // and flag it as estimated so the UI can show a warning.
-      const paymentEst = estimatePaymentDate(exDate);
-      return {
-        paymentDate:   paymentEst,
-        exDate:        exDate,       // THIS is the actual ex-date from Yahoo
-        amountPerUnit: div.amount,
-        source:        'yahoo',
-      };
+    const res = await fetch(`/api/dividends?ticker=${encodeURIComponent(ticker)}`, {
+      cache: 'no-store',
     });
+    if (!res.ok) {
+      logger.error(`[yahoo-proxy] /api/dividends returned ${res.status} for ${ticker}`);
+      return [];
+    }
+    const data = await res.json();
+
+    if (!data.dividends || data.dividends.length === 0) {
+      if (data.error) {
+        logger.error(`[yahoo-proxy] Error for ${ticker}: ${data.error}`);
+      } else {
+        logger.warn(`[yahoo-proxy] No dividends found for ${ticker}`);
+      }
+      return [];
+    }
+
+    logger.log(`[yahoo-proxy] ${ticker}: ${data.dividends.length} events from Yahoo Finance`);
+
+    return data.dividends.map((d: { exDate: string; paymentDate: string; amountPerUnit: number }) => ({
+      paymentDate:   d.paymentDate,
+      exDate:        d.exDate,   // Yahoo 'date' field IS the ex-date
+      amountPerUnit: d.amountPerUnit,
+      source:        'yahoo',
+    }));
   } catch (e) {
-    logger.error(`Yahoo/allorigins error for ${ticker}:`, e);
+    logger.error(`[yahoo-proxy] Fetch error for ${ticker}:`, e);
     return [];
   }
 }
@@ -211,12 +212,21 @@ export async function syncDividends(
         )
       );
 
-      // Fetch from providers
+      // Fetch from providers — brapi first, Yahoo fallback
+      logger.log(`[syncDividends] Fetching ${asset.ticker} via brapi...`);
       let raws: RawDividend[] = await fetchBrapiDividends(asset.ticker);
+
       if (raws.length === 0) {
+        logger.log(`[syncDividends] brapi returned 0 for ${asset.ticker}, trying Yahoo Finance proxy...`);
         raws = await fetchYahooDividends(asset.ticker);
       }
-      if (raws.length === 0) continue;
+
+      if (raws.length === 0) {
+        logger.warn(`[syncDividends] Both providers returned 0 dividends for ${asset.ticker}`);
+        continue;
+      }
+
+      logger.log(`[syncDividends] ${asset.ticker}: ${raws.length} raw events from provider`);
 
       const toInsert = [];
       for (const raw of raws) {
@@ -272,6 +282,7 @@ export async function syncDividends(
     await new Promise(r => setTimeout(r, 300));
   }
 
+  logger.log(`[syncDividends] Done — synced: ${synced}, errors: ${errors.length}`, errors.length ? errors : '');
   return { synced, errors };
 }
 

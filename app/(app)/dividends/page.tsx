@@ -1,80 +1,72 @@
 'use client';
 
 import { useT } from '@/lib/i18n';
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { Pencil, Trash2, Plus } from 'lucide-react';
 import { useApp } from '@/lib/app-context';
 import { DividendEvent } from '@/types';
-import { getStatusLabel, getStatusColor } from '@/lib/calculations/dividend-calendar';
+import {
+  getStatusLabel, getStatusColor,
+  isPaid, isPending, isAnnounced,
+} from '@/lib/calculations/dividend-calendar';
 import { formatCurrency, formatDate, isThisMonth } from '@/utils/format';
 import {
   PageHeader, PageContent, Card, CardHeader, CardBody,
-  StatCard, Button, Badge, TickerBadge,
+  StatCard, Button, TickerBadge,
   EmptyState, Toast, C,
 } from '@/components/ui';
 import { DividendModal } from '@/components/modals/DividendModal';
+import { reconcileDividendStatuses } from '@/services/price-sync.service';
 
 export default function DividendsPage() {
   const { t } = useT();
-  const { assets, dividends, portfolio, addDividend, updateDividend, deleteDividend, syncDividendsNow } = useApp();
+  const {
+    assets, dividends, portfolio,
+    addDividend, updateDividend, deleteDividend, syncDividendsNow,
+  } = useApp();
 
-  const [syncing, setSyncing] = useState(false);
-
-  const [showModal, setShowModal] = useState(false);
+  const [syncing,    setSyncing]    = useState(false);
+  const [showModal,  setShowModal]  = useState(false);
   const [editTarget, setEditTarget] = useState<DividendEvent | undefined>();
-  const [toast, setToast] = useState({ visible: false, msg: '' });
+  const [toast,      setToast]      = useState({ visible: false, msg: '' });
+
+  // Auto-reconcile stale statuses on page open (entitled → paid after date passes)
+  useEffect(() => {
+    if (portfolio?.id) {
+      reconcileDividendStatuses(portfolio.id).catch(() => {});
+    }
+  }, [portfolio?.id]);
 
   function notify(msg: string) {
     setToast({ visible: true, msg });
-    setTimeout(() => setToast(t => ({ ...t, visible: false })), 2500);
+    setTimeout(() => setToast(s => ({ ...s, visible: false })), 2500);
   }
 
-  // Stats
-  const thisMonth = useMemo(() => dividends.filter(d => isThisMonth(d.payment_date)), [dividends]);
+  // Stats — use canonical helpers so both old and new status values work
+  const thisMonth     = useMemo(() => dividends.filter(d => isThisMonth(d.payment_date)), [dividends]);
   const totalExpected = thisMonth.reduce((s, d) => s + d.expected_amount, 0);
-  const totalReceived = thisMonth.filter(d => d.status === 'received').reduce((s, d) => s + (d.received_amount || d.expected_amount), 0);
-  const totalPending  = thisMonth.filter(d => d.status === 'expected' || d.status === 'pending').reduce((s, d) => s + d.expected_amount, 0);
+  const totalReceived = thisMonth
+    .filter(d => isPaid(d.status))
+    .reduce((s, d) => s + (d.received_amount > 0 ? d.received_amount : d.expected_amount), 0);
+  const totalPending  = thisMonth
+    .filter(d => isPending(d.status) || isAnnounced(d.status))
+    .reduce((s, d) => s + d.expected_amount, 0);
 
-  // Sorted dividends
+  // Sorted timeline
   const sorted = useMemo(
-    () => [...dividends].sort((a, b) => new Date(a.payment_date).getTime() - new Date(b.payment_date).getTime()),
+    () => [...dividends].sort((a, b) =>
+      new Date(a.payment_date).getTime() - new Date(b.payment_date).getTime()
+    ),
     [dividends]
   );
 
-  // Current-month detailed events (for the detailed section)
-  const currentMonthEvents = useMemo(
-    () => sorted.filter(d => isThisMonth(d.payment_date)),
+  const pendingEvents = useMemo(
+    () => sorted.filter(d => isPending(d.status) || isAnnounced(d.status)),
     [sorted]
   );
 
-  // Previous 6 months — summary totals only (NOT including current month)
-  const sixMonthHistory = useMemo(() => {
-    const now   = new Date();
-    const months: { key: string; label: string; total: number; received: number; count: number }[] = [];
-
-    for (let offset = 1; offset <= 6; offset++) {
-      const d = new Date(now.getFullYear(), now.getMonth() - offset, 1);
-      const yr = d.getFullYear();
-      const mo = d.getMonth();
-
-      const monthDivs = dividends.filter(div => {
-        const pd = new Date(div.payment_date);
-        return pd.getFullYear() === yr && pd.getMonth() === mo;
-      });
-
-      if (monthDivs.length === 0) continue;
-
-      const total    = monthDivs.reduce((s, d) => s + (d.received_amount || d.expected_amount), 0);
-      const received = monthDivs.filter(d => d.status === 'received').reduce((s, d) => s + (d.received_amount || d.expected_amount), 0);
-      const label    = d.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
-
-      months.push({ key: `${yr}-${mo}`, label, total, received, count: monthDivs.length });
-    }
-    return months;
-  }, [dividends]);
-
-  function handleEdit(d: DividendEvent) { setEditTarget(d); setShowModal(true); }
-  function handleClose() { setEditTarget(undefined); setShowModal(false); }
+  function handleEdit(d: DividendEvent)  { setEditTarget(d);         setShowModal(true);  }
+  function handleClose()                  { setEditTarget(undefined); setShowModal(false); }
 
   return (
     <>
@@ -95,7 +87,9 @@ export default function DividendsPage() {
                 } else {
                   notify(t('dividends.none_found'));
                 }
-              } catch { notify(t('dividends.sync_error')); }
+              } catch {
+                notify(t('dividends.sync_error'));
+              }
               setSyncing(false);
             }}>
               🔄 {syncing ? t('dividends.syncing_btn') : t('dividends.sync_btn')}
@@ -106,31 +100,40 @@ export default function DividendsPage() {
           </div>
         }
       />
+
       <PageContent>
 
         {/* Stats */}
-        <div className='prov-stat-grid' style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', marginBottom: '24px' }}>
+        <div
+          className="prov-stat-grid"
+          style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', marginBottom: '24px' }}
+        >
           <StatCard label={t('dividends.expected_month')} value={formatCurrency(totalExpected)} accent={C.blue} />
-          <StatCard label={t('dividends.received_month')}  value={formatCurrency(totalReceived)} color={C.green} accent={C.green} />
+          <StatCard label={t('dividends.received_month')} value={formatCurrency(totalReceived)} color={C.green}  accent={C.green} />
           <StatCard label={t('dividends.pending_month')}  value={formatCurrency(totalPending)}  color={totalPending > 0 ? C.amber : C.green} accent={C.amber} />
         </div>
 
-        {/* Timeline */}
+        {/* Calendar card */}
         <Card>
           <CardHeader action={
-            <Button variant="primary" size="sm" onClick={() => setShowModal(true)}>
-              <Plus size={13} /> Novo
+            <Button variant="primary" size="sm" onClick={() => { setEditTarget(undefined); setShowModal(true); }}>
+              <Plus size={13} /> {t('dividends.new_btn')}
             </Button>
           }>
-            📅 Calendário de Proventos
+            {t('dividends.calendar_title')}
           </CardHeader>
+
           <CardBody style={{ padding: '0 24px 16px' }}>
             {sorted.length === 0 ? (
               <EmptyState
                 icon="📅"
                 title={t('dividends.empty_title')}
                 description={t('dividends.empty_desc')}
-                action={<Button variant="primary" size="sm" onClick={() => setShowModal(true)}>{`+ ${t('dividends.add_btn_short')}`}</Button>}
+                action={
+                  <Button variant="primary" size="sm" onClick={() => { setEditTarget(undefined); setShowModal(true); }}>
+                    {`+ ${t('dividends.add_btn_short')}`}
+                  </Button>
+                }
               />
             ) : (
               <div>
@@ -146,17 +149,17 @@ export default function DividendsPage() {
                 }}>
                   <span>{t('dividends.col_asset')}</span>
                   <span>{t('dividends.col_ex_date')}</span>
-                  <span>Pagamento</span>
-                  <span>Esperado</span>
-                  <span>Recebido</span>
+                  <span>{t('dividends.col_payment_date')}</span>
+                  <span>{t('dividends.col_expected')}</span>
+                  <span>{t('dividends.col_received')}</span>
                   <span>{t('dividends.col_status')}</span>
-                  <span></span>
+                  <span />
                 </div>
 
+                {/* Rows */}
                 {sorted.map(ev => {
-                  const asset = assets.find(a => a.id === ev.asset_id);
+                  const asset       = assets.find(a => a.id === ev.asset_id);
                   const statusColor = getStatusColor(ev.status);
-                  const highlight = isThisMonth(ev.payment_date);
                   return (
                     <div key={ev.id} style={{
                       display: 'grid',
@@ -165,7 +168,6 @@ export default function DividendsPage() {
                       padding: '14px 0',
                       borderBottom: `1px solid ${C.gray50}`,
                       alignItems: 'center',
-                      background: highlight ? 'transparent' : 'transparent',
                     }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                         {asset
@@ -196,12 +198,21 @@ export default function DividendsPage() {
                         </span>
                       </span>
                       <div style={{ display: 'flex', gap: '5px' }}>
-                        <button onClick={() => handleEdit(ev)} style={{ background: C.gray100, border: 'none', borderRadius: '6px', padding: '5px 8px', cursor: 'pointer', color: C.gray600 }}>
+                        <button
+                          onClick={() => handleEdit(ev)}
+                          style={{ background: C.gray100, border: 'none', borderRadius: '6px', padding: '5px 8px', cursor: 'pointer', color: C.gray600 }}
+                        >
                           <Pencil size={12} />
                         </button>
-                        <button onClick={() => {
-                          if (confirm(t('dividends.remove_confirm'))) { deleteDividend(ev.id); notify(t('dividends.removed_ok')); }
-                        }} style={{ background: '#FEF2F2', border: 'none', borderRadius: '6px', padding: '5px 8px', cursor: 'pointer', color: C.red }}>
+                        <button
+                          onClick={() => {
+                            if (confirm(t('dividends.remove_confirm'))) {
+                              deleteDividend(ev.id);
+                              notify(t('dividends.removed_ok'));
+                            }
+                          }}
+                          style={{ background: '#FEF2F2', border: 'none', borderRadius: '6px', padding: '5px 8px', cursor: 'pointer', color: C.red }}
+                        >
                           <Trash2 size={12} />
                         </button>
                       </div>
@@ -213,83 +224,37 @@ export default function DividendsPage() {
           </CardBody>
         </Card>
 
-        {/* ── 6-Month Dividend History (summary only) ──────────────────── */}
-        {sixMonthHistory.length > 0 && (
+        {/* Pending confirmation */}
+        {pendingEvents.length > 0 && (
           <Card style={{ marginTop: '20px' }}>
-            <CardHeader>📊 {t('dividends.history_title')}</CardHeader>
-            <CardBody style={{ padding: '0 24px 8px' }}>
-              {sixMonthHistory.map(({ key, label, total, received, count }) => {
-                const pct = total > 0 ? Math.round((received / total) * 100) : 0;
+            <CardHeader>{t('dividends.pending_section_title')}</CardHeader>
+            <CardBody style={{ padding: '0 24px 16px' }}>
+              {pendingEvents.map(ev => {
+                const asset = assets.find(a => a.id === ev.asset_id);
                 return (
-                  <div key={key} style={{
+                  <div key={ev.id} style={{
                     display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                    padding: '14px 0', borderBottom: `1px solid ${C.gray100}`,
+                    padding: '12px 0', borderBottom: `1px solid ${C.gray50}`,
                   }}>
-                    <div>
-                      <div style={{ fontSize: '13px', fontWeight: '600', color: C.gray800, textTransform: 'capitalize' }}>
-                        {label}
-                      </div>
-                      <div style={{ fontSize: '11px', color: C.gray400, marginTop: '2px' }}>
-                        {count} {count !== 1 ? t('dividends.history_events_pl') : t('dividends.history_event')}
-                      </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      {asset && <TickerBadge ticker={asset.ticker} />}
+                      <span style={{ fontSize: '13px', color: C.gray600 }}>
+                        {formatDate(ev.payment_date)} · {formatCurrency(ev.expected_amount)}
+                      </span>
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-                      {/* Progress bar */}
-                      <div style={{ width: '64px' }}>
-                        <div style={{ height: '4px', background: C.gray100, borderRadius: '2px', overflow: 'hidden' }}>
-                          <div style={{ height: '100%', width: `${pct}%`, background: pct === 100 ? C.green : C.amber, borderRadius: '2px', transition: 'width .3s' }} />
-                        </div>
-                        <div style={{ fontSize: '10px', color: C.gray400, marginTop: '3px', textAlign: 'right' }}>
-                          {pct}%
-                        </div>
-                      </div>
-                      <div style={{ textAlign: 'right', minWidth: '90px' }}>
-                        <div style={{ fontSize: '15px', fontWeight: '800', color: received > 0 ? C.green : C.gray400, fontFamily: 'var(--mono)' }}>
-                          {formatCurrency(received > 0 ? received : total)}
-                        </div>
-                        {received > 0 && received < total && (
-                          <div style={{ fontSize: '10px', color: C.gray400, marginTop: '2px' }}>
-                            {t('dividends.history_expected')}: {formatCurrency(total)}
-                          </div>
-                        )}
-                      </div>
-                    </div>
+                    <Button
+                      variant="secondary"
+                      size="xs"
+                      onClick={() => {
+                        updateDividend(ev.id, { status: 'received', received_amount: ev.expected_amount });
+                        notify(t('dividends.marked_received', { ticker: asset?.ticker ?? '' }));
+                      }}
+                    >
+                      {t('dividends.mark_received_btn')}
+                    </Button>
                   </div>
                 );
               })}
-            </CardBody>
-          </Card>
-        )}
-
-        {/* Quick mark received */}
-        {sorted.filter(d => d.status === 'expected' || d.status === 'pending').length > 0 && (
-          <Card style={{ marginTop: '20px' }}>
-            <CardHeader>⏰ Pendentes de Confirmação</CardHeader>
-            <CardBody style={{ padding: '0 24px 16px' }}>
-              {sorted
-                .filter(d => d.status === 'expected' || d.status === 'pending')
-                .map(ev => {
-                  const asset = assets.find(a => a.id === ev.asset_id);
-                  return (
-                    <div key={ev.id} style={{
-                      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                      padding: '12px 0', borderBottom: `1px solid ${C.gray50}`,
-                    }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        {asset && <TickerBadge ticker={asset.ticker} />}
-                        <span style={{ fontSize: '13px', color: C.gray600 }}>
-                          {formatDate(ev.payment_date)} · {formatCurrency(ev.expected_amount)}
-                        </span>
-                      </div>
-                      <Button variant="secondary" size="xs" onClick={() => {
-                        updateDividend(ev.id, { status: 'received', received_amount: ev.expected_amount });
-                        notify(`${asset?.ticker} marcado como recebido`);
-                      }}>
-                        ✓ Marcar Recebido
-                      </Button>
-                    </div>
-                  );
-                })}
             </CardBody>
           </Card>
         )}
@@ -299,12 +264,13 @@ export default function DividendsPage() {
       <DividendModal
         open={showModal}
         onClose={handleClose}
-        onSave={d => { addDividend(d); notify('Provento registrado'); }}
-        onUpdate={(id, d) => { updateDividend(id, d); notify('Provento atualizado'); }}
+        onSave={d         => { addDividend(d);          notify(t('dividends.saved_ok'));   }}
+        onUpdate={(id, d) => { updateDividend(id, d);   notify(t('dividends.updated_ok')); }}
         assets={assets}
         portfolioId={portfolio.id}
         edit={editTarget}
       />
+
       <Toast message={toast.msg} visible={toast.visible} />
     </>
   );

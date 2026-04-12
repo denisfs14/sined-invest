@@ -6,7 +6,7 @@ import { useState, useEffect } from 'react';
 import {
   LayoutDashboard, Briefcase, Zap,
   Settings, History, CalendarDays, LogOut,
-  ArrowLeftRight, Menu, X, TrendingUp, UserCog, Star,
+  ArrowLeftRight, Menu, X, TrendingUp, UserCog, Star, Shield,
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase/client';
 import { C } from '@/components/ui';
@@ -24,7 +24,7 @@ import { bridgePlan } from '@/lib/plan-access';
 export function Sidebar() {
   const pathname  = usePathname();
   const router    = useRouter();
-  const { user, planData } = useApp();
+  const { user, planData, userRole } = useApp();
   const effectivePlan = bridgePlan(planData.plan); // 'free'|'simple'|'advanced'
   const { t }     = useT();
   const MOBILE_NAV = [
@@ -43,6 +43,9 @@ export function Sidebar() {
     { href: '/strategy',     label: t('nav.strategy'),  icon: Settings,        group: 'Config' },
     { href: '/history',      label: t('nav.history'),   icon: History,         group: 'Config' },
     { href: '/settings',     label: t('nav.settings'),  icon: UserCog,         group: 'Config' },
+    ...(userRole === 'admin' ? [
+      { href: '/admin', label: t('nav.admin_panel'), icon: Shield, group: 'Admin' },
+    ] : []),
   ];
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -107,14 +110,37 @@ export function Sidebar() {
 
         {/* Nav groups */}
         <nav style={{ flex: 1, padding: '14px 10px', overflowY: 'auto' }}>
-          {['Analysis', 'Config'].map(group => {
+          {['Analysis', 'Config', ...(userRole === 'admin' ? ['Admin'] : [])].map(group => {
             const items = NAV.filter(n => n.group === group);
+            const groupLabel = group === 'Config' ? t('nav.config') : group === 'Admin' ? t('nav.admin_panel') : t('nav.analysis');
             return (
               <div key={group} style={{ marginBottom: '20px' }}>
-                <div style={{ fontSize: '9px', fontWeight: '700', color: 'rgba(255,255,255,.25)', letterSpacing: '2px', textTransform: 'uppercase', padding: '0 14px', marginBottom: '6px' }}>
-                  {group === 'Config' ? t('nav.config') : t('nav.analysis')}
+                <div style={{ fontSize: '9px', fontWeight: '700', color: group === 'Admin' ? 'rgba(239,68,68,.5)' : 'rgba(255,255,255,.25)', letterSpacing: '2px', textTransform: 'uppercase', padding: '0 14px', marginBottom: '6px' }}>
+                  {group === 'Admin' ? 'Admin' : groupLabel}
                 </div>
-                {items.map(item => <NavItem key={item.href} href={item.href} label={item.label} Icon={item.icon} />)}
+                {items.map(item => {
+                  const active = pathname === item.href || (item.href === '/admin' && pathname.startsWith('/admin'));
+                  const isAdminItem = item.group === 'Admin';
+                  return (
+                    <Link key={item.href} href={item.href} style={{ textDecoration: 'none' }}>
+                      <div style={{
+                        display: 'flex', alignItems: 'center', gap: '10px',
+                        padding: '10px 14px', borderRadius: '10px', cursor: 'pointer',
+                        background: active ? (isAdminItem ? 'rgba(239,68,68,.12)' : 'rgba(255,255,255,.1)') : 'transparent',
+                        transition: 'background .15s',
+                      }}
+                        onMouseEnter={e => { if (!active) (e.currentTarget as HTMLElement).style.background = isAdminItem ? 'rgba(239,68,68,.07)' : 'rgba(255,255,255,.06)'; }}
+                        onMouseLeave={e => { if (!active) (e.currentTarget as HTMLElement).style.background = 'transparent'; }}
+                      >
+                        <item.icon size={16} color={active ? (isAdminItem ? '#EF4444' : C.goldL) : (isAdminItem ? 'rgba(239,68,68,.5)' : 'rgba(255,255,255,.5)')} />
+                        <span style={{ fontSize: '13px', fontWeight: active ? '700' : '500', color: active ? (isAdminItem ? '#FCA5A5' : C.white) : (isAdminItem ? 'rgba(239,68,68,.7)' : 'rgba(255,255,255,.6)') }}>
+                          {item.label}
+                        </span>
+                        {active && <div style={{ marginLeft: 'auto', width: '5px', height: '5px', borderRadius: '50%', background: isAdminItem ? '#EF4444' : C.goldL }} />}
+                      </div>
+                    </Link>
+                  );
+                })}
               </div>
             );
           })}
@@ -150,7 +176,7 @@ export function Sidebar() {
                 <Star size={14} color="#c9a84c" fill="#c9a84c" style={{ flexShrink: 0 }} />
                 <div style={{ minWidth: 0 }}>
                   <div style={{ fontSize: '12px', fontWeight: '800', color: '#c9a84c', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{t('nav.upgrade_pro')}</div>
-                  <div style={{ fontSize: '10px', color: 'rgba(255,255,255,.35)', marginTop: '1px' }}>{effectivePlan === 'simple' ? '$12/mo' : '$5/mo'}</div>
+                  <div style={{ fontSize: '10px', color: 'rgba(255,255,255,.35)', marginTop: '1px' }}>{effectivePlan === 'simple' ? '$19/mo' : '$9/mo'}</div>
                 </div>
               </div>
             </Link>
@@ -204,12 +230,12 @@ export function Sidebar() {
           display: 'none',
           padding: '16px 12px',
         }}>
-          {['Analysis', 'Config'].map(group => {
+          {['Analysis', 'Config', ...(userRole === 'admin' ? ['Admin'] : [])].map(group => {
             const items = NAV.filter(n => n.group === group);
             return (
               <div key={group} style={{ marginBottom: '20px' }}>
-                <div style={{ fontSize: '10px', fontWeight: '700', color: 'rgba(255,255,255,.3)', letterSpacing: '2px', textTransform: 'uppercase', padding: '0 14px', marginBottom: '8px' }}>
-                  {group === 'Config' ? t('nav.config') : t('nav.analysis')}
+                <div style={{ fontSize: '10px', fontWeight: '700', color: group === 'Admin' ? 'rgba(239,68,68,.5)' : 'rgba(255,255,255,.3)', letterSpacing: '2px', textTransform: 'uppercase', padding: '0 14px', marginBottom: '8px' }}>
+                  {group === 'Admin' ? 'Admin' : group === 'Config' ? t('nav.config') : t('nav.analysis')}
                 </div>
                 {items.map(item => (
                   <NavItem key={item.href} href={item.href} label={item.label} Icon={item.icon}
@@ -240,7 +266,7 @@ export function Sidebar() {
                 <Star size={12} color="#c9a84c" fill="#c9a84c" />
                 <div>
                   <div style={{ fontSize: '11px', fontWeight: '700', color: '#c9a84c' }}>{t('nav.upgrade_pro')}</div>
-                  <div style={{ fontSize: '10px', color: 'rgba(255,255,255,.3)' }}>{effectivePlan === 'simple' ? '$12/mo' : '$5/mo'}</div>
+                  <div style={{ fontSize: '10px', color: 'rgba(255,255,255,.3)' }}>{effectivePlan === 'simple' ? '$19/mo' : '$9/mo'}</div>
                 </div>
               </div>
             </Link>

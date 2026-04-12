@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
-import { LayoutDashboard, Users, CreditCard, ArrowLeft, Shield } from 'lucide-react';
+import { LayoutDashboard, Users, CreditCard, ArrowLeft, Shield, Settings } from 'lucide-react';
 import { fetchMyProfile } from '@/services/admin.service';
 import { isAdmin } from '@/lib/access-control';
 import { useT } from '@/lib/i18n';
@@ -31,9 +31,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }
 
   const NAV = [
-    { href: '/admin',         label: t('admin.nav_overview'), icon: LayoutDashboard },
-    { href: '/admin/users',   label: t('admin.nav_users'),    icon: Users },
-    { href: '/admin/billing', label: t('admin.nav_billing'),  icon: CreditCard },
+    { href: '/admin',          label: t('admin.nav_overview'),  icon: LayoutDashboard },
+    { href: '/admin/users',    label: t('admin.nav_users'),     icon: Users },
+    { href: '/admin/billing',  label: t('admin.nav_billing'),   icon: CreditCard },
+    { href: '/admin/settings', label: t('admin.nav_settings'),  icon: Settings },
   ];
 
   return (

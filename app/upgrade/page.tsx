@@ -7,7 +7,6 @@ import { PLANS } from '@/lib/plans';
 import { useApp } from '@/lib/app-context';
 import { bridgePlan } from '@/lib/plan-access';
 import { useT } from '@/lib/i18n';
-import { redirectToCheckout } from '@/lib/stripe/client';
 import { C } from '@/components/ui';
 
 const COMPARISON_KEYS = [
@@ -42,21 +41,8 @@ export default function UpgradePage() {
   const [billing, setBilling] = useState<'monthly' | 'yearly'>('monthly');
   const { planData } = useApp();
   const { t } = useT();
-  const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
-  const [checkoutError,   setCheckoutError]   = useState<string | null>(null);
   const userPlan   = bridgePlan(planData.plan);
   const isAdvanced = userPlan === 'advanced';
-
-  async function handleCheckout(targetPlan: 'simple' | 'advanced') {
-    setCheckoutError(null);
-    setCheckoutLoading(targetPlan);
-    const err = await redirectToCheckout({ plan: targetPlan, yearly: billing === 'yearly' });
-    if (err) {
-      setCheckoutError(err);
-      setCheckoutLoading(null);
-    }
-    // If no error, user is being redirected to Stripe — no state change needed
-  }
 
   // ── Advanced users: show active-plan status, no purchase flow ────────────
   if (isAdvanced) {
@@ -188,16 +174,8 @@ export default function UpgradePage() {
                 </div>
               </div>
 
-              <button
-                disabled={isCurrent || checkoutLoading !== null}
-                onClick={() => { if (!isCurrent && plan.id !== 'free') handleCheckout(plan.id as 'simple' | 'advanced'); }}
-                style={{ width: '100%', padding: '13px', borderRadius: '10px', border: 'none', cursor: isCurrent || plan.id === 'free' ? 'default' : 'pointer', fontFamily: 'var(--font)', fontSize: '13px', fontWeight: '800', marginBottom: '22px', background: btnBg, color: btnColor, boxShadow: isSimple && !isCurrent ? `0 4px 16px ${C.blue}44` : 'none', opacity: checkoutLoading && checkoutLoading !== plan.id ? 0.5 : 1, transition: 'opacity .15s' }}
-              >
-                {checkoutLoading === plan.id
-                  ? t('upgrade.loading')
-                  : isCurrent
-                    ? t('upgrade.current_plan')
-                    : t(`upgrade.cta_${plan.id}`)}
+              <button disabled={isCurrent} style={{ width: '100%', padding: '13px', borderRadius: '10px', border: 'none', cursor: isCurrent ? 'default' : 'pointer', fontFamily: 'var(--font)', fontSize: '13px', fontWeight: '800', marginBottom: '22px', background: btnBg, color: btnColor, boxShadow: isSimple && !isCurrent ? `0 4px 16px ${C.blue}44` : 'none' }}>
+                {isCurrent ? t('upgrade.current_plan') : t(`upgrade.cta_${plan.id}`)}
               </button>
 
               <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -216,15 +194,6 @@ export default function UpgradePage() {
           );
         })}
       </div>
-
-      {/* Checkout error */}
-      {checkoutError && (
-        <div style={{ maxWidth: '500px', margin: '-60px auto 20px', padding: '0 24px' }}>
-          <div style={{ background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: '10px', padding: '12px 16px', fontSize: '13px', color: '#991B1B', textAlign: 'center' }}>
-            ⚠️ {checkoutError}
-          </div>
-        </div>
-      )}
 
       {/* Comparison table */}
       <div style={{ maxWidth: '900px', margin: '0 auto 80px', padding: '0 24px' }}>

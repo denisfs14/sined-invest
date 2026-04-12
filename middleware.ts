@@ -62,20 +62,4 @@ export async function middleware(request: NextRequest) {
   return response;
 }
 
-export const config = {
-  matcher: [
-    /*
-     * Match all request paths EXCEPT:
-     *  - _next/static  (static files)
-     *  - _next/image   (image optimisation)
-     *  - favicon.ico
-     *  - /api/*        (API routes — must never be redirected by middleware)
-     *
-     * Explicitly excluding /api/ here is belt-and-suspenders alongside the
-     * pathname.startsWith('/api') early-return inside the middleware function.
-     * This ensures the Stripe webhook endpoint (/api/stripe/webhook) is never
-     * intercepted by auth or locale redirect logic.
-     */
-    '/((?!_next/static|_next/image|favicon.ico|api/).*)',
-  ],
-};
+export const config = { matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'] };

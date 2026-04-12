@@ -10,7 +10,7 @@ import {
 import { useApp } from '@/lib/app-context';
 import { Asset, AssetClass } from '@/types';
 import { calculateContributionWindow } from '@/lib/calculations/dividend-calendar';
-import { formatCurrency, formatPercent, formatDate, daysFromNow, formatRelativeTime, formatQuantity } from '@/utils/format';
+import { formatCurrency, formatPercent, formatDate, daysFromNow, formatRelativeTime } from '@/utils/format';
 import {
   StatCard, Card, CardHeader, CardBody, Badge, TickerBadge,
   EmptyState, PageHeader, PageContent, PercentBar, Button, C,
@@ -721,7 +721,7 @@ export default function DashboardPage() {
                         <div>
                           <div style={{ fontSize: '10px', color: C.gray400 }}>Cotas</div>
                           <div style={{ fontFamily: 'var(--mono)', fontWeight: '700', fontSize: '14px' }}>
-                            {formatQuantity(item.quantity, item.asset?.ticker ?? '', null)}
+                            {typeof item.quantity === 'number' && item.quantity % 1 !== 0 ? item.quantity.toFixed(3) : item.quantity}
                           </div>
                         </div>
                         <div>

@@ -7,8 +7,6 @@ import { useApp } from '@/lib/app-context';
 import { PlanBadge } from '@/components/ui/PlanGate';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { useT } from '@/lib/i18n';
-import { redirectToPortal } from '@/lib/stripe/client';
-import { bridgePlan } from '@/lib/plan-access';
 import { supabase } from '@/lib/supabase/client';
 import {
   PageHeader, PageContent, Card, CardHeader, CardBody,
@@ -16,13 +14,9 @@ import {
 } from '@/components/ui';
 
 export default function SettingsPage() {
-  const { user, portfolio, resetPortfolio, planData } = useApp();
+  const { user, portfolio, resetPortfolio } = useApp();
   const router = useRouter();
   const { t } = useT();
-  const [portalLoading, setPortalLoading] = useState(false);
-  const [portalError,   setPortalError]   = useState<string | null>(null);
-  const effectivePlan = bridgePlan(planData.plan);
-  const isSubscribed  = effectivePlan !== 'free';
 
   const [toast, setToast]         = useState({ visible: false, msg: '', type: 'success' as 'success' | 'error' });
   const [loading, setLoading]     = useState(false);
@@ -114,34 +108,10 @@ export default function SettingsPage() {
               <div style={SECTION_STYLE}>
                 <div>
                   <div style={{ fontSize: '13px', fontWeight: '600', color: C.gray800 }}>{t('settings.plan_label')}</div>
-                  <div style={{ fontSize: '12px', color: C.gray400, marginTop: '2px' }}>
-                    {effectivePlan === 'advanced' ? '$19/month · Advanced Mode' : effectivePlan === 'simple' ? '$9/month · Simple Mode' : t('settings.plan_free_label')}
-                  </div>
+                  <div style={{ fontSize: '12px', color: C.gray400, marginTop: '2px' }}>Gratuito · brapi.dev free tier</div>
                 </div>
                 <PlanBadge />
               </div>
-              {isSubscribed && (
-                <div style={{ ...SECTION_STYLE, flexDirection: 'column', alignItems: 'flex-start', gap: '8px' }}>
-                  <div style={{ fontSize: '13px', fontWeight: '600', color: C.gray800 }}>{t('settings.billing_title')}</div>
-                  {portalError && <div style={{ fontSize: '12px', color: C.red }}>{portalError}</div>}
-                  <button
-                    onClick={async () => {
-                      setPortalLoading(true); setPortalError(null);
-                      const err = await redirectToPortal();
-                      if (err) { setPortalError(err); setPortalLoading(false); }
-                    }}
-                    style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '8px 16px', borderRadius: '8px', border: `1px solid ${C.gray200}`, background: 'white', fontSize: '12px', fontWeight: '700', color: C.gray800, cursor: 'pointer', fontFamily: 'var(--font)' }}
-                  >
-                    {portalLoading ? t('settings.billing_loading') : t('settings.billing_manage')}
-                  </button>
-                </div>
-              )}
-              {!isSubscribed && (
-                <div style={SECTION_STYLE}>
-                  <div style={{ fontSize: '13px', color: C.gray500 }}>{t('settings.plan_upgrade_hint')}</div>
-                  <a href="/upgrade" style={{ fontSize: '12px', fontWeight: '700', color: C.blue, textDecoration: 'none' }}>{t('settings.plan_upgrade_link')}</a>
-                </div>
-              )}
               <div style={{ ...SECTION_STYLE, borderBottom: 'none' }}>
                 <div>
                   <div style={{ fontSize: '13px', fontWeight: '600', color: C.gray800 }}>{t('settings.member_since')}</div>
