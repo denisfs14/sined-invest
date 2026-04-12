@@ -17,7 +17,7 @@ export function getStripe(): Stripe {
     throw new Error('STRIPE_SECRET_KEY is not set. Add it to your environment variables.');
   }
   _stripe = new Stripe(key, {
-    apiVersion: '2026-03-25.dahlia',
+    apiVersion: '2025-02-24.acacia',
     typescript: true,
   });
   return _stripe;
