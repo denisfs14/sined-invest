@@ -56,7 +56,7 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const stripe = new Stripe(cfg.secretKey, { apiVersion: '2054-02-24.acacia' });
+  const stripe = new Stripe(cfg.secretKey, { apiVersion: '2025-02-24.acacia' });
 
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
 
