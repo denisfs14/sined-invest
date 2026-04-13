@@ -64,23 +64,31 @@ export async function fetchQuotes(tickers: string[]): Promise<BrapiQuote[]> {
 
 export async function fetchDividends(ticker: string): Promise<BrapiDividend[]> {
   try {
-    const res  = await fetch(
-      `${BASE_URL}/quote/${ticker}?token=${BRAPI_TOKEN}&dividends=true`,
-      { cache: 'no-store' }
-    );
-    if (!res.ok) return [];
-    const data = await res.json();
-    const raw  = data?.results?.[0]?.dividendsData?.cashDividends ?? [];
+    const appUrl =
+  process.env.NEXT_PUBLIC_APP_URL || 'https://invest.sinedtech.com';
 
-    return raw
-      .filter((d: { paymentDate?: string; value?: number }) => d.paymentDate && d.value)
-      .map((d: { paymentDate: string; declarationDate?: string; value: number; label?: string }) => ({
-        symbol:          ticker,
-        paymentDate:     d.paymentDate.slice(0, 10),
-        declarationDate: d.declarationDate?.slice(0, 10),
-        value:           d.value,
-        type:            d.label ?? 'DIVIDENDO',
-      }));
+const res = await fetch(
+  `${appUrl}/api/dividends?ticker=${encodeURIComponent(ticker)}`,
+  { cache: 'no-store' }
+);
+
+if (!res.ok) return [];
+
+const data = await res.json();
+const raw = data?.dividends ?? [];
+
+return raw.map((d: {
+  paymentDate?: string;
+  exDate?: string | null;
+  amountPerUnit?: number;
+  source?: string;
+}) => ({
+  symbol: ticker,
+  paymentDate: d.paymentDate?.slice(0, 10),
+  declarationDate: d.exDate?.slice(0, 10),
+  value: d.amountPerUnit ?? 0,
+  type: d.source ?? 'DIVIDENDO',
+}));
   } catch (e) {
     logger.error(`brapi dividends error for ${ticker}:`, e);
     return [];

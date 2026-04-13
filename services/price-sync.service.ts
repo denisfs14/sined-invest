@@ -66,33 +66,35 @@ interface RawDividend {
 // ─── brapi — try dividends endpoint (paid plan) ───────────────────────────────
 async function fetchBrapiDividends(ticker: string): Promise<RawDividend[]> {
   try {
-    const res = await fetch(
-      `${BRAPI_BASE}/quote/${ticker}?token=${BRAPI_TOKEN}&dividends=true`,
-      { cache: 'no-store' }
-    );
-    if (!res.ok) {
-      logger.warn(`[brapi] HTTP ${res.status} for ${ticker}`);
-      return [];
-    }
-    const data   = await res.json();
-    const result = data?.results?.[0];
-    const divs   = result?.dividendsData?.cashDividends ?? [];
+    const appUrl =
+  process.env.NEXT_PUBLIC_APP_URL || 'https://invest.sinedtech.com';
 
-    const mapped = divs
-      .filter((d: Record<string, unknown>) => (d.value || d.rate) && d.paymentDate)
-      .map((d: Record<string, unknown>) => ({
-        paymentDate:   String(d.paymentDate).slice(0, 10),
-        exDate:        d.approvedOn
-          ? String(d.approvedOn).slice(0, 10)
-          : d.lastDatePrior
-          ? String(d.lastDatePrior).slice(0, 10)
-          : null,
-        amountPerUnit: Number(d.value ?? d.rate ?? 0),
-        source:        'brapi',
-      }));
+const res = await fetch(
+  `${appUrl}/api/dividends?ticker=${encodeURIComponent(ticker)}`,
+  { cache: 'no-store' }
+);
 
-    console.log(`[brapi] ${ticker}: ${mapped.length} dividend events`);
-    return mapped;
+if (!res.ok) {
+  logger.warn(`[dividends-api] HTTP ${res.status} for ${ticker}`);
+  return [];
+}
+
+const data = await res.json();
+const divs = data?.dividends ?? [];
+
+const mapped = divs.map((d: {
+  paymentDate?: string;
+  exDate?: string | null;
+  amountPerUnit?: number;
+  source?: string;
+}) => ({
+  paymentDate: d.paymentDate?.slice(0, 10) ?? '',
+  exDate: d.exDate?.slice(0, 10) ?? null,
+  amountPerUnit: d.amountPerUnit ?? 0,
+  source: d.source ?? 'api',
+}));
+
+return mapped;
   } catch {
     return [];
   }
